@@ -8,7 +8,7 @@ them back. Both devices can be in airplane mode.
 
 ## Use it
 
-**<https://REPLACE-ME.github.io/lumen/>**
+**<https://tejaswimsft.github.io/lumen/>**
 
 Open that on both devices. On iPhone, tap **Share ▸ Add to Home Screen** — it then
 launches like a native app and never needs the network again.
