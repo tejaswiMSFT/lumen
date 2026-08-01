@@ -91,7 +91,7 @@ function line(l, ok, d) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${l.padEnd(46)} 
   f += line('nothing readable: gives a remedy', /fill the bright square/i.test(r.nothingSeen), `"${r.nothingSeen}"`);
   f += line('progress sheet appears on lock', r.sheetShown === true);
   f += line('diagnostics show scans and codes', /\d+ scans · \d+ codes/.test(r.diagBefore), `"${r.diagBefore}"`);
-  f += line('diagnostics switch to droplet counts', /good · .*repeat/.test(r.diagDuring), `"${r.diagDuring}"`);
+  f += line('diagnostics switch to droplet counts', /received · .*repeat/.test(r.diagDuring), `"${r.diagDuring}"`);
 
   const withPct = r.samples.filter(s => /Receiving \d+%/.test(s));
   f += line('pill shows a live percentage', withPct.length >= 3,

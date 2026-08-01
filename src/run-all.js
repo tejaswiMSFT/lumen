@@ -10,6 +10,7 @@ const TESTS = [
   'test-decode.js',
   'test-capture.js',
   'test-ios.js',
+  'test-layout.js',
   'test-progress.js',
   'test-bootstrap.js',
   'test-offline.js',

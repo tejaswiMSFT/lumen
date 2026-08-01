@@ -367,6 +367,21 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
 }
 #qr{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 
+/* "Bigger" hides everything but the code. A larger symbol on the sending
+   screen is the single most effective way to make a denser preset readable,
+   because it is what decides pixels per module at the camera. */
+#view-tx.maximised .txtop,
+#view-tx.maximised .hud,
+#view-tx.maximised .qrstage::before{display:none}
+#view-tx.maximised{background:#fff}
+#view-tx.maximised::after{display:none}
+#view-tx.maximised .qrwrap{padding:0}
+#view-tx.maximised .qrcard{padding:8px;border-radius:0;box-shadow:none}
+#view-tx.maximised .txbar{
+  position:absolute;left:0;right:0;bottom:0;z-index:5;
+  background:linear-gradient(to top,rgba(255,255,255,.97),rgba(255,255,255,0));
+}
+
 /* HUD sits *behind* the card, so nothing can ever overlay the code itself
    and interfere with a camera trying to read it. */
 .hud{position:absolute;inset:-20px;pointer-events:none;z-index:1}
@@ -862,7 +877,7 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
     <span class="name" id="tx-name">—</span>
     <span class="tag" id="tx-tag">—</span>
   </div>
-  <div class="qrwrap">
+  <div class="qrwrap" id="qrwrap">
     <div class="qrstage">
       <div class="qrcard"><canvas id="qr"></canvas></div>
       <div class="hud"><i></i><i></i><i></i><i></i><b></b></div>
@@ -872,6 +887,7 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
     <span class="pulse" id="tx-dot"></span>
     <span class="num" id="tx-stat">—</span>
     <span class="spacer"></span>
+    <button class="btn secondary" id="tx-big">Bigger</button>
     <button class="btn" id="tx-pause">Pause</button>
     <button class="btn" id="tx-stop">Stop</button>
   </div>
@@ -2522,8 +2538,8 @@ const $$ = s => Array.from(document.querySelectorAll(s));
    Block sizes are derived from real alphanumeric capacity.
    ============================================================ */
 const PRESETS = [
-  { name:'Steady',   ver:14, ecl:QR.ECL.M, fps:8  },
-  { name:'Balanced', ver:20, ecl:QR.ECL.M, fps:12 },
+  { name:'Steady',   ver:14, ecl:QR.ECL.M, fps:12 },
+  { name:'Balanced', ver:20, ecl:QR.ECL.M, fps:14 },
   { name:'Fast',     ver:26, ecl:QR.ECL.L, fps:20 }
 ];
 PRESETS.forEach(p => {
@@ -2534,14 +2550,15 @@ PRESETS.forEach(p => {
 
 const DROPLET_HEADER = 9;
 
-/* The manifest tells the receiver what is coming, and until one arrives
-   nothing can be assembled. Codes can be hard to read at a distance, so a
-   sparse manifest means a receiver that reads a handful of frames may catch
-   none of them and appear stuck. Keep them dense early and still frequent
-   afterwards — the sender has no back-channel and can never know. */
-const MANIFEST_LEAD_FRAMES = 60;
+/* The manifest tells the receiver what is coming, and until one arrives nothing
+   can be assembled — so it must be caught early. But every manifest is a frame
+   not carrying data, and on a small file that overhead dominates: at one in
+   three it was 37% of an 8 KB transfer. Since droplets read before the manifest
+   are now held rather than discarded, arriving a little later costs nothing but
+   a moment, so keep the burst short and then go sparse. */
+const MANIFEST_LEAD_FRAMES = 12;
 const MANIFEST_LEAD_EVERY = 3;
-const MANIFEST_EVERY = 8;
+const MANIFEST_EVERY = 24;
 function manifestDue(n){
   if(n < 2) return true;
   return n < MANIFEST_LEAD_FRAMES ? n % MANIFEST_LEAD_EVERY === 0
@@ -3096,7 +3113,7 @@ function renderCaps(){
    SENDER
    ============================================================ */
 const TX = {
-  file:null, buf:null, gz:false, preset:1, enc:null, meta:null,
+  file:null, buf:null, gz:false, preset:1, enc:null, meta:null, last:null,
   raf:0, timer:0, watchdog:0, emitted:[],
   active:false, paused:false, frame:0, cycles:0,
 
@@ -3226,6 +3243,7 @@ const TX = {
       text = Fountain.base45Encode(Fountain.encodeDroplet(this.meta.i, d.seed, d.data));
     }
     const q = QR.encode(text, { ecl:p.ecl, version:p.ver });
+    this.last = q;
     paint(q);
 
     // Report the rate actually achieved, not the one we asked for.
@@ -3261,7 +3279,8 @@ const TX = {
     this.active = false;
     this.paused = false;
     $('#tx-pause').textContent = 'Pause';
-    $('#view-tx').classList.remove('paused');
+    $('#view-tx').classList.remove('paused', 'maximised');
+    $('#tx-big').textContent = 'Bigger';
     cancelAnimationFrame(this.raf);
     if(this.timer){ clearInterval(this.timer); this.timer = 0; }
     if(this.watchdog){ clearInterval(this.watchdog); this.watchdog = 0; }
@@ -3409,7 +3428,7 @@ const RX = {
     const diag = $('#aim-diag');
     if(diag){
       if(this.dec){
-        diag.textContent = `${this.newDroplets} good · ${this.dupDroplets} repeat · ` +
+        diag.textContent = `${this.newDroplets} received · ${this.dupDroplets} repeat · ` +
                            `${Math.round(this.decodeMs || 0)} ms/scan`;
       }else{
         const small = this.camRes && Math.min(this.camRes.w, this.camRes.h) < 700;
@@ -3425,6 +3444,10 @@ const RX = {
     if(this.dec){
       const pct = Math.floor((this.dec.count / this.dec.K) * 100);
       const left = this.dec.K - this.dec.count;
+      // The peeling decoder releases blocks in bursts: droplets accumulate,
+      // then a chain unlocks and the percentage jumps. Showing the droplet
+      // count alongside means something is always moving, so a burst reads as
+      // working rather than stuck.
       this.say(`Receiving ${pct}% · ${this.dec.count}/${this.dec.K} blocks · ${left} to go`);
       return;
     }
@@ -3466,7 +3489,7 @@ const RX = {
     // camera's own frame period — decoding faster than that only re-reads the
     // same picture — and slower devices back off automatically.
     const hasRVFC = 'requestVideoFrameCallback' in v;
-    let busy = false, lastRun = 0, budget = 0;
+    let busy = false, lastRun = 0, budget = 0, lastStamp = -1;
 
     const step = async () => {
       if(!this.running) return;
@@ -3475,8 +3498,13 @@ const RX = {
       if(ready && (!this.camRes || this.camRes.w !== v.videoWidth))
         this.camRes = { w:v.videoWidth, h:v.videoHeight };
       const interval = Math.max(30, Math.min(200, budget * 1.25));
-      if(ready && !busy && (hasRVFC || now - lastRun >= interval)){
-        busy = true; lastRun = now;
+      // Decoding a picture we have already decoded costs exactly as much and
+      // can never find anything new. Without rVFC we are called ~60 times a
+      // second against a 30 fps camera, so half that work is waste — and waste
+      // is what heats the phone in the user's hand.
+      const fresh = !ready || v.currentTime !== lastStamp;
+      if(ready && fresh && !busy && (hasRVFC || now - lastRun >= interval)){
+        busy = true; lastRun = now; lastStamp = v.currentTime;
         const t0 = performance.now();
         try{
           const text = await this.det(v, work, wctx);
@@ -3708,6 +3736,15 @@ document.addEventListener('drop', e => e.preventDefault());
 $('#start').addEventListener('click', () => TX.start());
 $('#tx-stop').addEventListener('click', () => TX.stop());
 $('#tx-pause').addEventListener('click', () => TX.togglePause());
+$('#tx-big').addEventListener('click', () => {
+  const v = $('#view-tx');
+  const on = !v.classList.contains('maximised');
+  v.classList.toggle('maximised', on);
+  $('#tx-big').textContent = on ? 'Smaller' : 'Bigger';
+  // The canvas is sized from the space available, so re-measure immediately
+  // rather than waiting for the next frame.
+  if(TX.last) paint(TX.last);
+});
 $('#recv-back').addEventListener('click', () => { RX.close(); go('view-role'); });
 $('#recv-cancel').addEventListener('click', () => { RX.close(); go('view-role'); });
 $('#again').addEventListener('click', () => RX.open());
