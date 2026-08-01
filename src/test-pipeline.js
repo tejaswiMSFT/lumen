@@ -71,11 +71,7 @@ function renderAndDecode(q, scale = 4, quiet = 4) {
   return r ? r.data : null;
 }
 
-const PRESETS = [
-  { name: 'Steady', ver: 14, ecl: QR.ECL.M },
-  { name: 'Balanced', ver: 20, ecl: QR.ECL.M },
-  { name: 'Fast', ver: 26, ecl: QR.ECL.M }
-];
+const PRESETS = require('./presets.js').readPresets(QR);
 
 console.log('\npreset    qrVer  chars  payload  block   ok');
 console.log('--------------------------------------------------');

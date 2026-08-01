@@ -9,6 +9,7 @@ const TESTS = [
   'test-pipeline.js',
   'test-decode.js',
   'test-ios.js',
+  'test-progress.js',
   'test-offline.js',
   'test-subpath.js'
 ];

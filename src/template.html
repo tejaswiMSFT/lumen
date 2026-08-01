@@ -965,7 +965,7 @@ const $$ = s => Array.from(document.querySelectorAll(s));
 const PRESETS = [
   { name:'Steady',   ver:14, ecl:QR.ECL.M, fps:8  },
   { name:'Balanced', ver:20, ecl:QR.ECL.M, fps:12 },
-  { name:'Fast',     ver:26, ecl:QR.ECL.M, fps:15 }
+  { name:'Fast',     ver:26, ecl:QR.ECL.L, fps:20 }
 ];
 PRESETS.forEach(p => {
   p.chars = QR.capacityAlnum(p.ver, p.ecl);
@@ -974,7 +974,18 @@ PRESETS.forEach(p => {
 });
 
 const DROPLET_HEADER = 9;
-const MANIFEST_EVERY = 12;
+
+/* The manifest tells the receiver what is coming, so it must arrive quickly —
+   but every manifest frame is a frame not carrying data. Send them densely for
+   the first couple of seconds, then back off. */
+const MANIFEST_LEAD_FRAMES = 40;
+const MANIFEST_LEAD_EVERY = 4;
+const MANIFEST_EVERY = 24;
+function manifestDue(n){
+  if(n < 2) return true;
+  return n < MANIFEST_LEAD_FRAMES ? n % MANIFEST_LEAD_EVERY === 0
+                                  : n % MANIFEST_EVERY === 0;
+}
 
 /* ============================================================
    Theme — "Auto" follows the OS. Note that on Windows, browsers
@@ -1644,7 +1655,7 @@ const TX = {
   render(p){
     const n = this.frame++;
     let text;
-    if(n < 2 || n % MANIFEST_EVERY === 0){
+    if(manifestDue(n)){
       text = this.manifestText;
     }else{
       const d = this.enc.droplet();
@@ -1795,7 +1806,7 @@ const RX = {
   reset(){
     this.dec = null; this.meta = null; this.stamps = []; this.lastPct = -1; this.result = null;
     this.newDroplets = 0; this.dupDroplets = 0; this.framesSeen = 0; this.decodeHits = 0;
-    this.peakRate = 0; this.lockedAt = 0; this.finishedAt = 0;
+    this.peakRate = 0; this.lockedAt = 0; this.finishedAt = 0; this.aimAt = 0;
     this.integrityOk = false; this.stats = null; this.qrVersion = null;
     $('#recv-sheet').classList.add('hidden');
     $('#reticle').classList.remove('locked');
@@ -1805,6 +1816,31 @@ const RX = {
     sp.innerHTML = '';
     this.sparkBars = [];
     for(let i = 0; i < 22; i++){ const b = document.createElement('b'); b.style.height = '2px'; sp.appendChild(b); this.sparkBars.push(b); }
+  },
+
+  /* The pill above the reticle is the one thing always on screen, so it must
+     say what is actually happening — before a lock as well as during one.
+     Silence here is what makes a transfer feel stuck. */
+  paintAim(now){
+    if(this.aimAt && now - this.aimAt < 400) return;
+    this.aimAt = now;
+
+    if(this.dec){
+      const pct = Math.floor((this.dec.count / this.dec.K) * 100);
+      const left = this.dec.K - this.dec.count;
+      this.say(`Receiving ${pct}% · ${this.dec.count}/${this.dec.K} blocks · ${left} to go`);
+      return;
+    }
+
+    // No manifest yet. Distinguish "seeing nothing" from "seeing codes but
+    // still waiting for the file details" — they need different remedies.
+    if(this.decodeHits > 0){
+      this.say(`Reading codes — waiting for the file details (${this.decodeHits} read)`);
+    }else if(this.framesSeen > 12){
+      this.say('No code yet — fill more of the frame, and check the other screen is showing codes');
+    }else{
+      this.say('Point at the sending screen');
+    }
   },
 
   say(msg, warn){
@@ -1822,7 +1858,9 @@ const RX = {
     // Without requestVideoFrameCallback (Safari), rAF fires ~60x/sec while a
     // software decode costs 15-25 ms. Decoding every frame would saturate a
     // phone's main thread, so pace the work to what the device can sustain
-    // and never queue a second decode while one is running.
+    // and never queue a second decode while one is running. The floor is the
+    // camera's own frame period — decoding faster than that only re-reads the
+    // same picture — and slower devices back off automatically.
     const hasRVFC = 'requestVideoFrameCallback' in v;
     let busy = false, lastRun = 0, budget = 0;
 
@@ -1830,9 +1868,7 @@ const RX = {
       if(!this.running) return;
       const now = performance.now();
       const ready = v.readyState >= 2 && v.videoWidth;
-      // Aim for a decode roughly every 60 ms, but back off if this device
-      // is slower than that so the interface stays responsive.
-      const interval = Math.max(55, Math.min(200, budget * 1.25));
+      const interval = Math.max(30, Math.min(200, budget * 1.25));
       if(ready && !busy && (hasRVFC || now - lastRun >= interval)){
         busy = true; lastRun = now;
         const t0 = performance.now();
@@ -1845,6 +1881,7 @@ const RX = {
         budget = budget ? budget * 0.8 + cost * 0.2 : cost;
         this.decodeMs = budget;
         busy = false;
+        this.paintAim(now);
       }
       if(hasRVFC) v.requestVideoFrameCallback(step);
       else this.raf = requestAnimationFrame(step);

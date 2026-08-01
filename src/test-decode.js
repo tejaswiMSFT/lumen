@@ -128,6 +128,42 @@ add(run('rotate+blur+noise',     { scale: 6, pad: 40, rotate: 5, blur: 1, noise:
 console.log('---------------------------------------------------');
 console.log(`TOTAL                              ${agg.ok}/${agg.total}   ${Math.round(agg.ok/agg.total*100)}%`);
 
+/* The presets as shipped, at their full payload — the exact symbols a phone
+   will actually have to read, including the lower ECC used by Fast. */
+const PRESETS = require('./presets.js').readPresets(QR);
+const ECLN = ['L','M','Q','H'];
+const REAL = [
+  { label: 'hand-held',   o: { scale: 5, pad: 30, rotate: 4, blur: 1, noise: 0.10 } },
+  { label: 'at an angle', o: { scale: 5, pad: 30, perspective: 0.10 } },
+  { label: 'soft focus',  o: { scale: 6, blur: 2 } },
+  { label: 'dim screen',  o: { scale: 5, contrast: 0.5 } }
+];
+console.log('\npreset symbols at full payload');
+console.log('---------------------------------------------------');
+let presetOk = 0, presetTotal = 0;
+for (const p of PRESETS) {
+  const chars = QR.capacityAlnum(p.ver, p.ecl);
+  let ok = 0, total = 0;
+  const per = [];
+  for (const cond of REAL) {
+    let cOk = 0;
+    for (let t = 0; t < 3; t++) {
+      const text = ra(chars, p.ver * 53 + t);
+      const q = QR.encode(text, { ecl: p.ecl, version: p.ver });
+      const img = render(q, cond.o);
+      if (QRD.decode(img.rgba, img.W, img.H) === text) { ok++; cOk++; }
+      total++;
+    }
+    per.push(`${cond.label} ${cOk}/3`);
+  }
+  presetOk += ok; presetTotal += total;
+  console.log(`${(p.name + ' v' + p.ver + ' ' + ECLN[p.ecl] + ' ' + chars + 'ch').padEnd(34)} ` +
+              `${String(ok + '/' + total).padEnd(8)} ${String(Math.round(ok / total * 100) + '%').padEnd(6)} ` +
+              per.join('  '));
+}
+
+process.exit(agg.ok / agg.total > 0.9 && presetOk / presetTotal > 0.8 ? 0 : 1);
+
 /* Full wire-format round trip through the decoder. */
 const payload = new Uint8Array(600);
 for (let i = 0; i < payload.length; i++) payload[i] = (i * 37) & 255;
