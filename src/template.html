@@ -850,12 +850,13 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
 
     <div class="card" id="qualitycard" hidden>
       <div class="t-head" style="margin-bottom:4px">Transmission speed</div>
-      <div class="t-foot dim" style="margin-bottom:13px">Faster codes are denser and need a steadier hand.</div>
+      <div class="t-foot dim" style="margin-bottom:13px">Faster codes are denser and need a steadier hand. Colour sends three codes at once.</div>
       <div class="seg" id="seg-speed">
         <div class="thumb"></div>
         <button data-v="0" aria-selected="false">Steady</button>
         <button data-v="1" aria-selected="true">Balanced</button>
         <button data-v="2" aria-selected="false">Fast</button>
+        <button data-v="3" aria-selected="false">Colour</button>
       </div>
       <div class="hair"></div>
       <div class="row" style="justify-content:space-between"><span class="t-sub dim">Estimated time</span><span class="t-sub num" id="est">—</span></div>
@@ -989,7 +990,8 @@ const $$ = s => Array.from(document.querySelectorAll(s));
 const PRESETS = [
   { name:'Steady',   ver:14, ecl:QR.ECL.M, fps:12 },
   { name:'Balanced', ver:20, ecl:QR.ECL.M, fps:14 },
-  { name:'Fast',     ver:26, ecl:QR.ECL.L, fps:20 }
+  { name:'Fast',     ver:26, ecl:QR.ECL.L, fps:20 },
+  { name:'Colour',   ver:20, ecl:QR.ECL.M, fps:16, colour:true }
 ];
 PRESETS.forEach(p => {
   p.chars = QR.capacityAlnum(p.ver, p.ecl);
@@ -1604,10 +1606,13 @@ const TX = {
   estimate(){
     if(!this.buf) return;
     const p = PRESETS[this.preset];
+    const planes = p.colour ? 3 : 1;
     const K = Math.ceil(this.buf.length / p.block);
-    const frames = K * (1 + 1/MANIFEST_EVERY) * 1.15;   // manifests + fountain overhead
+    // Manifests carry no data, and the fountain needs a few more droplets than
+    // there are blocks. A colour frame carries three droplets.
+    const frames = (K / planes) * (1 + 1/MANIFEST_EVERY) * 1.15;
     $('#est').textContent = fmtTime(frames / p.fps);
-    $('#thru').textContent = `${fmtBytes(p.block * p.fps)}/s · ${K} block${K === 1 ? '' : 's'}`;
+    $('#thru').textContent = `${fmtBytes(p.block * p.fps * planes)}/s · ${K} block${K === 1 ? '' : 's'}`;
   },
 
   async start(){
@@ -1624,7 +1629,8 @@ const TX = {
       k:this.enc.K,
       b:p.block,
       l:this.buf.length,
-      qv:p.ver
+      qv:p.ver,
+      cm:p.colour ? 1 : 0
     };
     this.manifestText = Fountain.base45Encode(Fountain.encodeManifest(this.meta));
     if(this.manifestText.length > p.chars){
@@ -1683,17 +1689,25 @@ const TX = {
 
   render(p){
     const n = this.frame++;
-    let text;
+    let qs;
     if(manifestDue(n)){
-      text = this.manifestText;
+      // Manifests go out plain, so a receiver that has not yet worked out the
+      // mode can still read one by brightness alone.
+      qs = QR.encode(this.manifestText, { ecl:p.ecl, version:p.ver });
     }else{
-      const d = this.enc.droplet();
-      if(d.seed > 0 && d.seed % this.enc.K === 0) this.cycles++;
-      text = Fountain.base45Encode(Fountain.encodeDroplet(this.meta.i, d.seed, d.data));
+      const planes = p.colour ? 3 : 1;
+      const list = [];
+      for(let i = 0; i < planes; i++){
+        const d = this.enc.droplet();
+        if(d.seed > 0 && d.seed % this.enc.K === 0) this.cycles++;
+        list.push(QR.encode(
+          Fountain.base45Encode(Fountain.encodeDroplet(this.meta.i, d.seed, d.data)),
+          { ecl:p.ecl, version:p.ver }));
+      }
+      qs = planes === 1 ? list[0] : list;
     }
-    const q = QR.encode(text, { ecl:p.ecl, version:p.ver });
-    this.last = q;
-    paint(q);
+    this.last = qs;
+    paint(qs);
 
     // Report the rate actually achieved, not the one we asked for.
     const now = performance.now();
@@ -1743,9 +1757,20 @@ function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;',
 /* Integer-scaled painting keeps module edges perfectly crisp. */
 const canvas = $('#qr');
 const ctx2d = canvas.getContext('2d', { alpha:false });
-function paint(q){
+
+/* Paint one symbol, or three at once into the red, green and blue channels.
+   Three symbols in one frame triples the payload; a camera carries colour at
+   lower resolution than brightness, so this needs a slightly larger symbol on
+   screen, but far less than three frames would cost.
+
+   A single symbol is written to all three channels, which renders as ordinary
+   black on white — so manifests stay readable by brightness alone and a
+   receiver can always find its footing. */
+function paint(qs){
+  const list = Array.isArray(qs) ? qs : [qs];
+  const q0 = list[0];
   const QUIET = 4;
-  const total = q.size + QUIET * 2;
+  const total = q0.size + QUIET * 2;
   const wrap = $('.qrwrap');
   const avail = Math.max(120, Math.min(wrap.clientWidth, wrap.clientHeight) - 28);
   const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
@@ -1757,15 +1782,38 @@ function paint(q){
     canvas.width = canvas.height = total * devMod;
     canvas.style.width = canvas.style.height = (total * devMod / dpr) + 'px';
   }
-  ctx2d.fillStyle = '#fff';
-  ctx2d.fillRect(0, 0, canvas.width, canvas.height);
-  ctx2d.fillStyle = '#000';
-  for(let y = 0; y < q.size; y++){
-    for(let x = 0; x < q.size; x++){
-      if(q.modules[y * q.size + x])
-        ctx2d.fillRect((x + QUIET) * devMod, (y + QUIET) * devMod, devMod, devMod);
+
+  if(list.length === 1){
+    ctx2d.fillStyle = '#fff';
+    ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+    ctx2d.fillStyle = '#000';
+    for(let y = 0; y < q0.size; y++){
+      for(let x = 0; x < q0.size; x++){
+        if(q0.modules[y * q0.size + x])
+          ctx2d.fillRect((x + QUIET) * devMod, (y + QUIET) * devMod, devMod, devMod);
+      }
+    }
+    return;
+  }
+
+  // Three planes: a dark module in a channel removes that channel's light.
+  const img = ctx2d.createImageData(canvas.width, canvas.height);
+  const d = img.data;
+  d.fill(255);
+  for(let ch = 0; ch < 3; ch++){
+    const q = list[ch];
+    for(let y = 0; y < q.size; y++){
+      for(let x = 0; x < q.size; x++){
+        if(!q.modules[y * q.size + x]) continue;
+        const px0 = (x + QUIET) * devMod, py0 = (y + QUIET) * devMod;
+        for(let dy = 0; dy < devMod; dy++){
+          let o = ((py0 + dy) * canvas.width + px0) * 4 + ch;
+          for(let dx = 0; dx < devMod; dx++, o += 4) d[o] = 0;
+        }
+      }
     }
   }
+  ctx2d.putImageData(img, 0, 0);
 }
 
 /* ============================================================
@@ -1853,7 +1901,7 @@ const RX = {
     this.dec = null; this.meta = null; this.stamps = []; this.lastPct = -1; this.result = null;
     this.newDroplets = 0; this.dupDroplets = 0; this.framesSeen = 0; this.decodeHits = 0;
     this.peakRate = 0; this.lockedAt = 0; this.finishedAt = 0; this.aimAt = 0; this.camRes = null;
-    this.pending = [];
+    this.pending = []; this.colour = false;
     this.integrityOk = false; this.stats = null; this.qrVersion = null;
     $('#recv-sheet').classList.add('hidden');
     $('#reticle').classList.remove('locked');
@@ -1956,9 +2004,13 @@ const RX = {
         busy = true; lastRun = now; lastStamp = v.currentTime;
         const t0 = performance.now();
         try{
-          const text = await this.det(v, work, wctx);
+          const got = await this.det(v, work, wctx);
           this.framesSeen++;
-          if(text){ this.decodeHits++; this.onText(text); }
+          if(got){
+            const list = Array.isArray(got) ? got : [got];
+            if(list.length) this.decodeHits++;
+            for(const text of list) this.onText(text);
+          }
         }catch(e){}
         const cost = performance.now() - t0;
         budget = budget ? budget * 0.8 + cost * 0.2 : cost;
@@ -2016,6 +2068,7 @@ const RX = {
     this.lockedAt = performance.now();
     this.newDroplets = 0; this.dupDroplets = 0; this.peakRate = 0;
     this.qrVersion = meta.qv || null;
+    this.colour = !!meta.cm;
     $('#rname').textContent = meta.n;
     $('#rsize').textContent = `${fmtBytes(meta.s)}${meta.z ? ' · compressed' : ''} · ${meta.k} blocks`;
     $('#reticle').classList.add('locked');
@@ -2093,7 +2146,8 @@ const RX = {
 };
 
 /* Decoder: the browser's native BarcodeDetector when present (hardware
-   accelerated), otherwise our own built-in decoder. Never the network. */
+   accelerated), otherwise our own built-in decoder. Never the network.
+   Returns an array of decoded strings — colour frames carry three. */
 async function makeDetector(){
   if(CAPS.barcode){
     try{
@@ -2103,13 +2157,16 @@ async function makeDetector(){
         RX.engine = 'Native BarcodeDetector';
         return async (video) => {
           const found = await bd.detect(video);
-          return found.length ? found[0].rawValue : null;
+          return found.length ? [found[0].rawValue] : null;
         };
       }
     }catch(e){}
   }
   RX.engine = 'Built-in decoder';
   let pass = 0;
+  // Reused between calls so a colour split does not allocate three buffers
+  // every frame — allocation churn is heat.
+  let plane = null;
   return async (video, work, wctx) => {
     const vw = video.videoWidth, vh = video.videoHeight;
     // Resolution is what decides whether a symbol is readable: below roughly
@@ -2136,7 +2193,27 @@ async function makeDetector(){
     if(work.width !== w || work.height !== h){ work.width = w; work.height = h; }
     wctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
     const img = wctx.getImageData(0, 0, w, h);
-    return QRDecode.decode(img.data, w, h);
+
+    // Until the mode is known, read brightness: manifests are always plain, so
+    // this is what lets a receiver find its footing either way.
+    if(!RX.colour) return QRDecode.decode(img.data, w, h);
+
+    // Colour frames carry one symbol per channel. A plain frame has the same
+    // symbol in all three, so this also reads manifests — as three copies, of
+    // which two are harmless duplicates.
+    const src = img.data;
+    const n = w * h;
+    if(!plane || plane.length !== n * 4) plane = new Uint8ClampedArray(n * 4);
+    const out = [];
+    for(let ch = 0; ch < 3; ch++){
+      for(let i = 0, o = 0; i < n; i++, o += 4){
+        const v = src[o + ch];
+        plane[o] = plane[o + 1] = plane[o + 2] = v; plane[o + 3] = 255;
+      }
+      const got = QRDecode.decode(plane, w, h);
+      if(got) out.push(got);
+    }
+    return out.length ? out : null;
   };
 }
 
