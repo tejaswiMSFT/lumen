@@ -735,13 +735,11 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
         <p>This whole app is <b>one HTML file</b>. Send it to anyone — AirDrop, Quick Share, WhatsApp, email, USB. No install, no archive to extract, no server, no account, and <b>no shared network</b>.</p>
         <p>They can pass it on to someone else too. Lumen copies itself.</p>
         <div class="note warn" id="ios-tip" hidden style="display:block;margin:12px 0">
-          <b>Sending to an iPhone?</b> Don't bother with the file itself. Tapping it in
-          Files only shows a <i>preview</i>, which can't run apps, and iOS won't offer
-          Safari in the share sheet — every app is sandboxed, so no app can hand a local
-          file to a browser. The only route that works is an <b>https link</b>.
-          Plain <span class="num">http://192.168…</span> is not enough: browsers block the
-          camera on insecure origins, so the phone could open Lumen but never receive.
-          See <b>Get it onto an iPhone</b> below.
+          <b>Sending to an iPhone?</b> Don't send the file — send the <b>link</b>.
+          iOS sandboxes every app, so nothing can hand a local file to Safari; the share
+          sheet only ever offers Notes, Mail and the like, and tapping the file in Files
+          shows a <i>preview</i> that can't run apps. Point the iPhone's <b>Camera</b> at
+          a QR of the address below and it opens in Safari directly.
         </div>
         <button class="btn" id="share-app" style="margin:12px 0 8px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
@@ -756,28 +754,24 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
         <div id="host-card" hidden>
           <div class="hair"></div>
           <p class="t-foot" style="margin:0 0 10px"><b>Get it onto an iPhone</b><br>
-            iOS sandboxes every app, so nothing can pass this file to Safari — the share
-            sheet only ever offers Notes, Mail and the like. You need a <b>link</b>, and for
-            the camera to work it must be <b>https</b>.</p>
+            iOS won't hand a local file to Safari, so you need a <b>link</b> — and for the
+            camera to work it must be <b>https</b>. Plain
+            <span class="num">http://192.168…</span> will load Lumen but leave the
+            receiver's camera blocked.</p>
 
-          <p class="t-foot" style="margin:10px 0 6px"><b>1. Instant https, no account</b>
-            — run these two where this file lives. The second prints an
-            <span class="num">https://…trycloudflare.com</span> address; open that on the phone.</p>
-          <div class="cmd">python -m http.server 8000</div>
+          <p class="t-foot" style="margin:10px 0 6px"><b>Easiest</b> — open the permanent
+            copy and add it to the Home Screen:</p>
+          <div class="cmd">https://tejaswimsft.github.io/lumen/</div>
+
+          <p class="t-foot" style="margin:12px 0 6px"><b>Your own https, no account</b> —
+            run these where this file lives; the second prints an
+            <span class="num">https://…trycloudflare.com</span> address:</p>
+          <div class="cmd">npx serve . -l 8000</div>
           <div class="cmd">cloudflared tunnel --url http://localhost:8000</div>
 
-          <p class="t-foot" style="margin:12px 0 6px"><b>2. Permanent</b> — drop this file on
-            any static host (GitHub Pages, Netlify, Cloudflare Pages). You get a lasting
-            https link you can reuse on any phone.</p>
-
-          <p class="t-foot" style="margin:12px 0 6px"><b>3. Same Wi-Fi, sending only</b> — the
-            plain server below is enough to <i>fetch</i> Lumen, but that origin is insecure,
-            so the phone can send files and not receive them.</p>
-          <div class="cmd">npx serve .</div>
-
-          <p class="t-cap dim3" style="margin:12px 0 0">Once it is open over https, tap
-            <b>Share ▸ Add to Home Screen</b>. It then launches like a native app, keeps its
-            camera permission, and needs no network ever again.</p>
+          <p class="t-cap dim3" style="margin:12px 0 0">Once open over https, tap
+            <b>Share ▸ Add to Home Screen</b>. It then launches like a native app and needs
+            no network ever again — the transfer itself never uses one.</p>
         </div>
       </div></div>
     </div>

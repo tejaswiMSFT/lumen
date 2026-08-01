@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" id="theme-color" content="#F2F2F7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%235AB2FF'/%3E%3Cstop offset='1' stop-color='%23006FE6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='11' fill='url(%23g)'/%3E%3Cg fill='none' stroke='white' stroke-linecap='round'%3E%3Crect x='7' y='29' width='12' height='12' rx='3.5' fill='white' stroke='none'/%3E%3Cpath d='M13 23A12 12 0 0 1 25 35' stroke-width='3.9'/%3E%3Cpath d='M13 15.5A19.5 19.5 0 0 1 32.5 35' stroke-width='3.5' opacity='.6'/%3E%3Ccircle cx='34' cy='14' r='6.8' stroke-width='3.2'/%3E%3Ccircle cx='34' cy='14' r='2.4' fill='white' stroke='none'/%3E%3C/g%3E%3C/svg%3E">
+<title>Lumen</title>
+<style>
+/* ============================================================
+   Design tokens — Apple iOS system palette & type scale
+   ============================================================ */
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue","Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.32,.72,0,1);
+  --ease-out:cubic-bezier(.25,.46,.45,.94);
+  --r-card:22px; --r-btn:14px; --r-sm:10px;
+  --pad:20px;
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+}
+/* Light */
+:root{
+  --blue:#007AFF; --green:#34C759; --red:#FF3B30; --orange:#FF9500; --indigo:#5856D6;
+  --bg:#F2F2F7; --elev:#FFFFFF; --elev2:#FFFFFF;
+  --label:#1C1C1E; --label2:rgba(60,60,67,.6); --label3:rgba(60,60,67,.32);
+  --sep:rgba(60,60,67,.22); --fill:rgba(120,120,128,.12); --fill2:rgba(120,120,128,.2);
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 10px 30px rgba(0,0,0,.07);
+  --blur:saturate(180%) blur(20px);
+  --glass:rgba(255,255,255,.72);
+  --engrave:rgba(70,110,190,.13);
+  --wash-a:rgba(120,170,255,.20);
+  --wash-b:rgba(150,190,255,.15);
+  --wash-c:rgba(120,220,170,.13);
+  --sheen:rgba(255,255,255,.5);
+  --bloom:.16;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme=light]){
+    --blue:#0A84FF; --green:#30D158; --red:#FF453A; --orange:#FF9F0A; --indigo:#5E5CE6;
+    --bg:#000000; --elev:#1C1C1E; --elev2:#2C2C2E;
+    --label:#FFFFFF; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+    --sep:rgba(84,84,88,.6); --fill:rgba(120,120,128,.24); --fill2:rgba(120,120,128,.36);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.5);
+    --glass:rgba(30,30,32,.72);
+    --engrave:rgba(150,195,255,.16);
+    --wash-a:rgba(40,110,220,.30);
+    --wash-b:rgba(60,90,190,.22);
+    --wash-c:rgba(30,150,120,.20);
+    --sheen:rgba(120,170,255,.05);
+    --bloom:.26;
+  }
+}
+:root[data-theme=dark]{
+  --blue:#0A84FF; --green:#30D158; --red:#FF453A; --orange:#FF9F0A; --indigo:#5E5CE6;
+  --bg:#000000; --elev:#1C1C1E; --elev2:#2C2C2E;
+  --label:#FFFFFF; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+  --sep:rgba(84,84,88,.6); --fill:rgba(120,120,128,.24); --fill2:rgba(120,120,128,.36);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.5);
+  --glass:rgba(30,30,32,.72);
+  --engrave:rgba(150,195,255,.16);
+  --wash-a:rgba(40,110,220,.30);
+  --wash-b:rgba(60,90,190,.22);
+  --wash-c:rgba(30,150,120,.20);
+  --sheen:rgba(120,170,255,.05);
+  --bloom:.26;
+}
+
+/* ---------- No-JavaScript fallback ----------
+   Shown wherever scripts are blocked (iOS Quick Look being the important
+   case). Deliberately self-contained styling with no custom properties,
+   since it must survive even the most restricted rendering. */
+.nojs{
+  position:fixed;inset:0;z-index:9999;overflow-y:auto;
+  background:#F2F2F7;color:#1C1C1E;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:max(28px,env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:center;
+}
+@media (prefers-color-scheme:dark){
+  .nojs{background:#000;color:#fff}
+  .nojs-card{background:#1C1C1E!important;box-shadow:0 10px 40px rgba(0,0,0,.6)!important}
+  .nojs-steps{background:rgba(120,120,128,.24)!important}
+  .nojs .k{background:rgba(120,120,128,.36)!important}
+}
+.nojs-card{
+  width:100%;max-width:460px;background:#fff;border-radius:22px;padding:26px 22px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04),0 12px 36px rgba(0,0,0,.10);
+}
+.nojs-mark{
+  width:58px;height:58px;border-radius:15px;margin:0 0 18px;
+  background:linear-gradient(180deg,#3E9BFF,#007AFF);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(0,122,255,.32);
+}
+.nojs-mark svg{width:30px;height:30px}
+.nojs h1{font-size:26px;font-weight:700;letter-spacing:.36px;margin:0 0 8px;line-height:1.2}
+.nojs .lead{font-size:16px;line-height:1.45;margin:0 0 20px;opacity:.75}
+.nojs-steps{background:rgba(120,120,128,.12);border-radius:14px;padding:15px 17px;margin-bottom:12px}
+.nojs-h{font-size:13px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;opacity:.55;margin:0 0 9px}
+.nojs ol{margin:0;padding-left:20px;font-size:15px;line-height:1.55}
+.nojs li{margin-bottom:8px}
+.nojs li:last-child{margin-bottom:0}
+.nojs-p{font-size:15px;line-height:1.5;margin:0 0 10px}
+.nojs .k{
+  display:inline-block;padding:1px 7px;border-radius:6px;
+  background:rgba(120,120,128,.22);font-size:13px;
+}
+.nojs-alt{font-size:13.5px;line-height:1.5;margin:11px 0 0;opacity:.7}
+.nojs-foot{font-size:13px;margin:16px 0 0;opacity:.5;text-align:center}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+/* iOS Safari's toolbars change the viewport height as you scroll; dvh tracks
+   the real visible area so full-screen views never get clipped. */
+@supports (height:100dvh){
+  html,body{height:100dvh}
+  .view{height:100dvh}
+}
+body{
+  margin:0;background:var(--bg);color:var(--label);
+  font-family:var(--font);font-size:17px;line-height:1.4;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow:hidden;overscroll-behavior:none;
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;
+  transition:background .4s var(--ease-out),color .4s var(--ease-out);
+}
+/* Safari needs an explicit gesture hint, or the first tap can be swallowed
+   while it waits to see whether a double-tap zoom is coming. */
+button,.opt,.acc-h,.drop{touch-action:manipulation}
+
+/* ---------- Background engraving ----------
+   A blueprint surface: a modular lattice that tiles at a fixed size on any
+   screen, broadcast arcs radiating from opposite corners, finder-pattern
+   watermarks and drifting colour blooms. Content cards sit opaque on top,
+   so the pattern reads in the gutters without ever fighting the text. */
+.backdrop{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+
+/* A wash of coloured light, not a printed texture. Large, soft, low-contrast
+   fields that read as illumination rather than pattern. */
+.backdrop::before{
+  content:'';position:absolute;inset:-20%;
+  background:
+    radial-gradient(ellipse 46% 38% at 14% 8%,  var(--wash-a), transparent 68%),
+    radial-gradient(ellipse 42% 34% at 88% 22%, var(--wash-b), transparent 66%),
+    radial-gradient(ellipse 52% 40% at 78% 92%, var(--wash-c), transparent 70%),
+    radial-gradient(ellipse 38% 30% at 8% 78%,  var(--wash-b), transparent 68%);
+  filter:blur(8px);
+  animation:washDrift 34s var(--ease-out) infinite alternate;
+}
+@keyframes washDrift{
+  to{transform:translate3d(0,-2.5%,0) scale(1.06)}
+}
+
+/* One barely-there sheen across the middle, so the surface isn't flat. */
+.backdrop::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(168deg,
+    transparent 0%, var(--sheen) 46%, var(--sheen) 54%, transparent 100%);
+}
+
+.eng{position:absolute;color:var(--engrave)}
+.eng svg{display:block;width:100%;height:100%;overflow:visible}
+.eng-line{fill:none;stroke:currentColor;stroke-width:.9}
+.eng-thin{fill:none;stroke:currentColor;stroke-width:.7;opacity:.45}
+
+/* Broadcast rings, blurred so they read as haloes of light rather than
+   technical drawing. Only two, far from the content column. */
+.arcs-a{
+  top:-18vmin;left:-20vmin;width:82vmin;height:82vmin;
+  filter:blur(1.4px);animation:pulseArcs 11s var(--ease-out) infinite;
+}
+.arcs-b{
+  bottom:-20vmin;right:-22vmin;width:70vmin;height:70vmin;
+  filter:blur(1.4px);animation:pulseArcs 11s var(--ease-out) infinite reverse;
+}
+@keyframes pulseArcs{0%,100%{opacity:.55}50%{opacity:.9}}
+
+/* Camera and transmit views own the full screen; the wash must not
+   show through and must never reach the optical path. */
+.camview,#view-tx{z-index:2}
+
+/* ---------- Type scale ---------- */
+.t-large{font-size:34px;font-weight:700;letter-spacing:.374px;line-height:1.2}
+.t-title{font-size:28px;font-weight:700;letter-spacing:.36px}
+.t-title3{font-size:20px;font-weight:600;letter-spacing:.38px}
+.t-head{font-size:17px;font-weight:600;letter-spacing:-.41px}
+.t-body{font-size:17px;font-weight:400;letter-spacing:-.41px}
+.t-sub{font-size:15px;font-weight:400;letter-spacing:-.24px}
+.t-foot{font-size:13px;font-weight:400;letter-spacing:-.08px}
+.t-cap{font-size:12px;font-weight:400;letter-spacing:0}
+.dim{color:var(--label2)}
+.dim3{color:var(--label3)}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* ---------- View stack ---------- */
+.view{
+  position:fixed;inset:0;display:flex;flex-direction:column;z-index:1;
+  opacity:0;pointer-events:none;transform:translate3d(0,0,0) scale(.97);
+  transition:opacity .38s var(--ease),transform .38s var(--ease);
+  will-change:opacity,transform;
+}
+.view.active{opacity:1;pointer-events:auto;transform:translate3d(0,0,0) scale(1)}
+.view.leaving{opacity:0;transform:translate3d(0,0,0) scale(1.02)}
+.scroll{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:0 var(--pad) calc(var(--pad) + var(--sab));
+  display:flex;flex-direction:column;align-items:center;
+  overscroll-behavior:contain;scroll-behavior:smooth;
+  scrollbar-width:none;
+}
+.scroll::-webkit-scrollbar{width:0;height:0}
+/* Keep an iOS-width column on large screens rather than stretching edge to edge. */
+.scroll>*{width:100%;max-width:470px;flex:none}
+.centred{justify-content:safe center}
+
+/* Entrance: children rise in sequence when a view becomes active. */
+.view.active .stagger>*{animation:rise .55s var(--ease) both}
+.view.active .stagger>*:nth-child(1){animation-delay:.02s}
+.view.active .stagger>*:nth-child(2){animation-delay:.05s}
+.view.active .stagger>*:nth-child(3){animation-delay:.08s}
+.view.active .stagger>*:nth-child(4){animation-delay:.11s}
+.view.active .stagger>*:nth-child(5){animation-delay:.14s}
+.view.active .stagger>*:nth-child(6){animation-delay:.17s}
+.view.active .stagger>*:nth-child(7){animation-delay:.19s}
+.view.active .stagger>*:nth-child(8){animation-delay:.21s}
+.view.active .stagger>*:nth-child(n+9){animation-delay:.23s}
+@keyframes rise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:none}}
+
+/* ---------- Nav bar ---------- */
+.nav{
+  display:flex;align-items:center;gap:6px;height:52px;flex:none;
+  padding:var(--sat) 12px 0;position:relative;
+}
+.nav .t-head{position:absolute;left:0;right:0;top:var(--sat);height:52px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.iconbtn{
+  display:inline-flex;align-items:center;justify-content:center;gap:2px;
+  min-width:44px;height:36px;padding:0 8px;border:0;border-radius:var(--r-sm);
+  background:transparent;color:var(--blue);font-family:var(--font);font-size:17px;
+  letter-spacing:-.41px;cursor:pointer;z-index:1;
+  transition:opacity .2s var(--ease),transform .2s var(--ease);
+}
+.iconbtn:active{opacity:.4;transform:scale(.94)}
+.iconbtn svg{width:20px;height:20px}
+.spacer{flex:1}
+
+/* ---------- Cards & rows ---------- */
+.card{
+  background:var(--elev);border-radius:var(--r-card);padding:20px;
+  box-shadow:var(--shadow);margin-bottom:14px;
+}
+.row{display:flex;align-items:center;gap:14px}
+.hair{height:1px;background:var(--sep);transform:scaleY(.5);transform-origin:top;margin:14px 0}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  height:50px;border:0;border-radius:var(--r-btn);
+  background:var(--blue);color:#fff;font-family:var(--font);
+  font-size:17px;font-weight:600;letter-spacing:-.41px;cursor:pointer;
+  transition:transform .5s var(--ease),opacity .2s var(--ease),background .22s var(--ease),box-shadow .3s var(--ease);
+  box-shadow:0 2px 10px rgba(0,122,255,.22);
+}
+.btn:active:not(:disabled){transform:scale(.955);opacity:.9;transition-duration:.09s}
+.btn:disabled{background:var(--fill2);color:var(--label3);cursor:default;box-shadow:none}
+.btn.secondary{background:var(--fill);color:var(--blue);box-shadow:none}
+.btn.ghost{background:transparent;color:var(--blue);box-shadow:none}
+.btn.danger{background:var(--fill);color:var(--red);box-shadow:none}
+.btn svg{width:19px;height:19px}
+.btn:focus-visible,.iconbtn:focus-visible,.opt:focus-visible,.acc-h:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+
+/* ---------- Big choice cards ---------- */
+.opt{
+  display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+  background:var(--elev);border:0;border-radius:var(--r-card);padding:20px;
+  box-shadow:var(--shadow);cursor:pointer;color:var(--label);font-family:var(--font);
+  margin-bottom:12px;
+  transition:transform .5s var(--ease),box-shadow .3s var(--ease);
+}
+.opt:active{transform:scale(.972);transition-duration:.09s}
+@media (hover:hover){
+  .opt:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(0,0,0,.05),0 14px 38px rgba(0,0,0,.10)}
+  .opt:hover .chev{transform:translateX(3px);color:var(--label2)}
+}
+.glyph{
+  width:52px;height:52px;border-radius:16px;flex:none;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  transition:transform .5s var(--ease);
+}
+.opt:active .glyph{transform:scale(.94)}
+.glyph svg{width:26px;height:26px}
+.g-blue{background:linear-gradient(180deg,#3E9BFF,#007AFF);box-shadow:0 5px 14px rgba(0,122,255,.32)}
+.g-green{background:linear-gradient(180deg,#4FDD73,#34C759);box-shadow:0 5px 14px rgba(52,199,89,.30)}
+.chev{margin-left:auto;color:var(--label3);flex:none;transition:transform .35s var(--ease),color .35s var(--ease)}
+.chev svg{width:16px;height:16px;display:block}
+
+/* ---------- Segmented control ---------- */
+.seg{
+  display:flex;background:var(--fill);border-radius:11px;padding:2px;position:relative;
+  isolation:isolate;
+}
+.seg button{
+  flex:1;border:0;background:transparent;color:var(--label);cursor:pointer;
+  font-family:var(--font);font-size:14px;font-weight:500;letter-spacing:-.08px;
+  padding:7px 4px;border-radius:9px;position:relative;z-index:1;
+  transition:color .25s var(--ease),font-weight .2s linear;
+}
+.seg button[aria-selected=true]{font-weight:600}
+.seg .thumb{
+  position:absolute;left:0;top:2px;bottom:2px;border-radius:9px;background:var(--elev2);
+  box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);z-index:0;
+  transition:transform .35s var(--ease),width .35s var(--ease);
+}
+:root[data-theme=dark] .seg .thumb,
+:root:not([data-theme=light]) .seg .thumb{box-shadow:0 3px 8px rgba(0,0,0,.5)}
+
+/* ---------- Drop zone ---------- */
+.drop{
+  border:2px dashed var(--sep);border-radius:var(--r-card);
+  padding:38px 20px;text-align:center;cursor:pointer;background:var(--elev);
+  transition:border-color .25s var(--ease),background .25s var(--ease),transform .25s var(--ease);
+}
+.drop:active{transform:scale(.985)}
+.drop.over{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 8%,var(--elev))}
+.drop .glyph{margin:0 auto 14px}
+
+/* ---------- Transmit screen ---------- */
+#view-tx{background:#04070C;color:#fff}
+/* Faint engineering grid + vignette behind the code. */
+#view-tx::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(90,190,255,.055) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(90,190,255,.055) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:radial-gradient(ellipse at center,#000 20%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse at center,#000 20%,transparent 78%);
+}
+#view-tx::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(10,132,255,.14),transparent 62%);
+}
+.qrwrap{
+  flex:1;display:flex;align-items:center;justify-content:center;padding:14px;min-height:0;
+  position:relative;z-index:1;
+}
+.qrstage{position:relative;display:flex;align-items:center;justify-content:center}
+/* Slowly rotating aurora, entirely behind the card. */
+.qrstage::before{
+  content:'';position:absolute;inset:-30px;border-radius:38px;z-index:0;
+  background:conic-gradient(from 0deg,
+    rgba(10,132,255,0), rgba(90,190,255,.55), rgba(10,132,255,0) 42%,
+    rgba(48,209,88,.30) 58%, rgba(10,132,255,0) 80%);
+  filter:blur(16px);
+  animation:spin 7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(1turn)}}
+
+.qrcard{
+  background:#fff;border-radius:20px;padding:14px;line-height:0;position:relative;z-index:2;
+  box-shadow:0 0 0 1px rgba(255,255,255,.16), 0 0 70px rgba(80,170,255,.30), 0 0 160px rgba(10,132,255,.16);
+}
+#qr{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* HUD sits *behind* the card, so nothing can ever overlay the code itself
+   and interfere with a camera trying to read it. */
+.hud{position:absolute;inset:-20px;pointer-events:none;z-index:1}
+.hud i{
+  position:absolute;width:34px;height:34px;
+  border:2px solid rgba(90,190,255,.85);
+  filter:drop-shadow(0 0 6px rgba(10,132,255,.75));
+}
+.hud i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.hud i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+.hud i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 8px}
+.hud i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.hud b{
+  position:absolute;left:-14px;right:-14px;height:2px;top:0;
+  background:linear-gradient(90deg,transparent,rgba(120,205,255,.95),transparent);
+  filter:drop-shadow(0 0 10px rgba(10,132,255,.9));
+  animation:sweep 3.4s cubic-bezier(.5,0,.5,1) infinite;
+}
+@keyframes sweep{0%{top:-2%;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:102%;opacity:0}}
+
+/* Paused: freeze the motion and mute the code so it clearly isn't live. */
+#view-tx.paused .hud b,
+#view-tx.paused .qrstage::before{animation-play-state:paused;opacity:.25}
+#view-tx.paused .qrcard{opacity:.4;transition:opacity .3s var(--ease)}
+#view-tx.paused .hud i{border-color:rgba(255,159,10,.8)}
+
+.txbar{
+  flex:none;padding:10px 20px calc(14px + var(--sab));display:flex;align-items:center;gap:14px;
+  color:rgba(160,205,240,.72);font-size:12px;letter-spacing:.02em;position:relative;z-index:1;
+  font-family:var(--mono);
+}
+.txbar .btn{width:auto;padding:0 20px;height:40px;font-size:15px;font-family:var(--font);
+  background:rgba(90,190,255,.16);color:#cfe9ff;border:1px solid rgba(90,190,255,.28)}
+.txtop{
+  flex:none;padding:calc(var(--sat) + 14px) 20px 4px;position:relative;z-index:1;
+  display:flex;align-items:baseline;gap:10px;
+}
+.txtop .name{color:#fff;font-size:15px;font-weight:600}
+.txtop .tag{font-family:var(--mono);font-size:11px;color:rgba(120,205,255,.75);letter-spacing:.08em}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);flex:none;animation:pulse 1.6s var(--ease-out) infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+
+/* ---------- Camera views ---------- */
+/* No `position` here: .view is already fixed and must stay the containing block. */
+.camview{background:#000}
+#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:filter .5s var(--ease),transform .5s var(--ease)}
+.camview.scanning #cam{filter:brightness(.34) saturate(.7)}
+.camlayer{position:absolute;inset:0;display:flex;flex-direction:column}
+
+/* Reticle */
+.reticle{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(72vw,340px);aspect-ratio:1;
+}
+.reticle i{
+  position:absolute;width:38px;height:38px;border:3.5px solid rgba(255,255,255,.95);
+  border-radius:6px;animation:breathe 2.4s var(--ease-out) infinite;
+}
+.reticle i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0;border-radius:14px 0 0 0}
+.reticle i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0;border-radius:0 14px 0 0}
+.reticle i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 14px}
+.reticle i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 14px 0}
+@keyframes breathe{0%,100%{opacity:.95}50%{opacity:.45}}
+.reticle.locked i{border-color:var(--green);animation:none}
+/* Once locked, shrink the reticle upward so the progress sheet owns the lower half. */
+.camview.scanning .reticle{
+  top:31%;width:min(44vw,190px);opacity:.55;
+  transition:top .5s var(--ease),width .5s var(--ease),opacity .5s var(--ease);
+}
+
+.pill{
+  align-self:center;margin:0 auto;padding:11px 20px;border-radius:100px;
+  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  color:var(--label);font-size:15px;font-weight:500;letter-spacing:-.24px;
+  display:flex;align-items:center;gap:9px;max-width:90%;
+  box-shadow:0 8px 24px rgba(0,0,0,.24);
+  transition:opacity .3s var(--ease),transform .3s var(--ease);
+}
+.pill.warn{color:var(--orange)}
+
+/* Progress ring */
+.ring{width:168px;height:168px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:11;stroke-linecap:round}
+.ring .track{stroke:var(--fill2)}
+.ring .fill{stroke:var(--green);stroke-dasharray:483.8;stroke-dashoffset:483.8;transition:stroke-dashoffset .45s var(--ease-out)}
+.ringwrap{position:relative;display:flex;align-items:center;justify-content:center}
+.ringtxt{position:absolute;text-align:center}
+
+/* Sheet used for progress + done, floating over the camera */
+.sheet{
+  margin-top:auto;background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  border-radius:28px 28px 0 0;padding:24px var(--pad) calc(20px + var(--sab));
+  box-shadow:0 -8px 40px rgba(0,0,0,.3);color:var(--label);
+  transform:translateY(0);transition:transform .45s var(--ease);
+}
+.sheet.hidden{transform:translateY(105%)}
+
+/* Sparkline of recent decode activity */
+.spark{display:flex;align-items:flex-end;gap:2.5px;height:22px}
+.spark b{width:4px;background:var(--green);border-radius:2px;min-height:2px;transition:height .2s var(--ease-out);opacity:.85}
+
+/* Success check */
+.check{width:88px;height:88px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto;animation:pop .55s var(--ease) both}
+.check svg{width:44px;height:44px}
+.check path{stroke:#fff;stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40;stroke-dashoffset:40;animation:draw .45s .2s var(--ease-out) forwards}
+@keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+.note{
+  display:flex;gap:10px;padding:13px 15px;border-radius:var(--r-btn);
+  background:var(--fill);font-size:13px;line-height:1.45;color:var(--label2);
+}
+.note.warn{background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange)}
+.note svg{width:16px;height:16px;flex:none;margin-top:1px}
+
+/* ---------- Collapsible section ---------- */
+.acc{
+  background:var(--elev);border-radius:var(--r-card);box-shadow:var(--shadow);
+  margin-bottom:10px;overflow:hidden;
+  transition:box-shadow .35s var(--ease);
+}
+.acc.open{box-shadow:0 2px 4px rgba(0,0,0,.05),0 14px 38px rgba(0,0,0,.10)}
+.acc-h{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:15px 18px;background:transparent;border:0;cursor:pointer;
+  color:var(--label);font-family:var(--font);text-align:left;
+  transition:background .2s var(--ease);
+}
+.acc-h:active{background:var(--fill)}
+@media (hover:hover){ .acc-h:hover .cv{color:var(--label2)} }
+.acc-h .lbl{font-size:16px;font-weight:600;letter-spacing:-.32px;flex:0 1 auto;min-width:0}
+.acc-h .sum{
+  margin-left:auto;font-size:13px;color:var(--label2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;
+  font-variant-numeric:tabular-nums;padding-left:8px;
+}
+.acc-h .cv{width:13px;height:13px;flex:none;color:var(--label3);transition:transform .35s var(--ease)}
+.acc.open .acc-h .cv{transform:rotate(90deg)}
+.acc-b{max-height:0;overflow:hidden;transition:max-height .45s var(--ease),opacity .3s var(--ease);opacity:0}
+.acc.open .acc-b{opacity:1}
+.acc-i{padding:0 18px 18px;font-size:14px;line-height:1.5;color:var(--label2)}
+.acc-i p{margin:0 0 9px}
+.acc-i p:last-child{margin-bottom:0}
+.acc-i ul{margin:0 0 9px;padding-left:19px}
+.acc-i li{margin-bottom:3px}
+.acc-i b{color:var(--label)}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:4px 0;align-items:flex-start}
+.kv span:first-child{color:var(--label2);font-size:13px;flex:0 0 auto}
+.kv span:last-child{font-size:13px;color:var(--label);text-align:right;font-variant-numeric:tabular-nums;min-width:0}
+
+/* Copyable command line */
+.cmd{
+  font-family:var(--mono);font-size:13px;
+  background:var(--fill);border-radius:10px;padding:10px 12px;margin-bottom:7px;
+  color:var(--label);user-select:all;-webkit-user-select:all;cursor:pointer;
+  word-break:break-all;position:relative;
+  transition:background .25s var(--ease);
+}
+.cmd:active{background:var(--fill2)}
+.cmd.copied::after{
+  content:'Copied';position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  font-family:var(--font);font-size:11px;font-weight:600;color:var(--green);
+}
+
+.fade-in{animation:fadeIn .45s var(--ease) both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.applogo{
+  width:60px;height:60px;border-radius:15px;margin:0 0 18px;
+  background:linear-gradient(180deg,#3E9BFF,#007AFF);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(0,122,255,.32);
+}
+.applogo svg{width:30px;height:30px}
+
+/* ---------- Appearance toggle ----------
+   One button that cycles Auto -> Light -> Dark. Icons crossfade and
+   rotate through each other; the label appears briefly on change. */
+.themebtn{
+  position:absolute;top:calc(var(--sat) + 12px);right:14px;z-index:5;
+  display:flex;align-items:center;gap:0;height:40px;padding:0 10px;
+  border:0;border-radius:20px;cursor:pointer;
+  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  color:var(--label);font-family:var(--font);
+  box-shadow:0 1px 2px rgba(0,0,0,.05),0 6px 18px rgba(0,0,0,.09);
+  transition:transform .5s var(--ease),box-shadow .3s var(--ease),padding .4s var(--ease);
+}
+.themebtn:active{transform:scale(.9);transition-duration:.09s}
+@media (hover:hover){ .themebtn:hover{box-shadow:0 2px 4px rgba(0,0,0,.07),0 10px 26px rgba(0,0,0,.14)} }
+.themebtn:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+
+.ticons{position:relative;width:20px;height:20px;flex:none;display:block}
+.ti{
+  position:absolute;inset:0;width:20px;height:20px;
+  opacity:0;transform:rotate(-70deg) scale(.4);
+  transition:opacity .4s var(--ease),transform .55s var(--ease);
+}
+.themebtn[data-mode=auto]  .ti-auto,
+.themebtn[data-mode=light] .ti-light,
+.themebtn[data-mode=dark]  .ti-dark{opacity:1;transform:none}
+.themebtn[data-mode=light] .ti-light{color:var(--orange)}
+.themebtn[data-mode=dark]  .ti-dark{color:var(--indigo)}
+
+/* The word slides out on change, then tucks away again. */
+.tlabel{
+  font-size:13px;font-weight:600;letter-spacing:-.08px;white-space:nowrap;
+  max-width:0;overflow:hidden;opacity:0;
+  transition:max-width .45s var(--ease),opacity .3s var(--ease),margin-left .45s var(--ease);
+}
+.themebtn.show-label .tlabel{max-width:56px;opacity:1;margin-left:7px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<!-- Visible by DEFAULT. JavaScript removes it on its first line, so this is
+     only ever seen where scripts are blocked — notably iOS Quick Look, which
+     renders local HTML with JavaScript disabled. It is the one thing that can
+     still communicate in that situation. -->
+<div class="nojs" id="nojs">
+  <div class="nojs-card">
+    <div class="nojs-mark">
+      <svg viewBox="0 0 48 48" fill="none" stroke-linecap="round">
+        <rect x="5" y="30" width="13" height="13" rx="3.8" fill="currentColor"/>
+        <path d="M11.5 23.5A13 13 0 0 1 24.5 36.5" stroke="currentColor" stroke-width="4.1"/>
+        <path d="M11.5 15A21.5 21.5 0 0 1 33 36.5" stroke="currentColor" stroke-width="3.7" opacity=".62"/>
+        <path d="M11.5 6.5A30 30 0 0 1 41.5 36.5" stroke="currentColor" stroke-width="3.3" opacity=".32"/>
+        <circle cx="35.5" cy="12.5" r="7.6" stroke="currentColor" stroke-width="3.4"/>
+        <circle cx="35.5" cy="12.5" r="2.7" fill="currentColor"/>
+      </svg>
+    </div>
+    <h1>Open Lumen in a browser</h1>
+    <p class="lead">You're seeing a <b>preview</b>, not the app. Previews can't run
+      code, so nothing here will respond to taps.</p>
+
+    <div class="nojs-steps">
+      <p class="nojs-h">Try this first</p>
+      <ol>
+        <li>Tap <b>Share</b> <span class="k">⬆︎</span> at the bottom of this preview.</li>
+        <li>Look for <b>Open in Safari</b>, or <b>Copy to Chrome</b> / <b>Firefox</b> / <b>Edge</b>.
+          Scroll the row of apps — it's often hidden off to the right.</li>
+      </ol>
+    </div>
+
+    <div class="nojs-steps">
+      <p class="nojs-h">No browser in that list?</p>
+      <p class="nojs-p">Apple doesn't let this preview hand a local file to Safari.
+        Any <b>one</b> of these works instead:</p>
+      <ol>
+        <li><b>Ask for a link.</b> Whoever sent this can host the same file anywhere —
+          then you just tap the link. This is the easiest fix by far.</li>
+        <li><b>Same Wi-Fi?</b> Ask them to open Lumen on their computer, go to
+          <b>Share this app</b>, and read out the address shown there.</li>
+        <li><b>Install any other browser</b> free from the App Store — Chrome, Firefox
+          and Edge all add a “Copy to…” option to that Share menu.</li>
+        <li><b>Downloaded this in Safari?</b> Open Safari, tap the <b>Downloads</b> arrow,
+          and tap the file there. Safari runs it properly from its own downloads.</li>
+      </ol>
+    </div>
+
+    <div class="nojs-steps">
+      <p class="nojs-h">Then do this once</p>
+      <p class="nojs-p">With Lumen open in Safari, tap <b>Share</b> <span class="k">⬆︎</span>
+        then <b>Add to Home Screen</b>. It becomes a normal app icon, opens instantly,
+        and never needs the internet again.</p>
+    </div>
+
+    <div class="nojs-steps">
+      <p class="nojs-h">Android, Windows or Mac</p>
+      <ol>
+        <li>Right-click or long-press the file.</li>
+        <li>Choose <b>Open with</b>, then any browser.</li>
+      </ol>
+    </div>
+
+    <p class="nojs-foot">Nothing is wrong with the file. It just needs a real browser.</p>
+  </div>
+</div>
+
+<div class="backdrop" aria-hidden="true">
+  <div class="eng arcs-a">
+    <svg viewBox="0 0 100 100">
+      <circle cx="30" cy="30" r="30" class="eng-line"/>
+      <circle cx="30" cy="30" r="46" class="eng-thin"/>
+      <circle cx="30" cy="30" r="66" class="eng-thin"/>
+      <circle cx="30" cy="30" r="88" class="eng-thin"/>
+    </svg>
+  </div>
+  <div class="eng arcs-b">
+    <svg viewBox="0 0 100 100">
+      <circle cx="70" cy="70" r="32" class="eng-line"/>
+      <circle cx="70" cy="70" r="52" class="eng-thin"/>
+      <circle cx="70" cy="70" r="76" class="eng-thin"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ══════════════ ROLE PICKER ══════════════ -->
+<section class="view active" id="view-role">
+  <button class="themebtn" id="theme-cycle" aria-label="Appearance">
+    <span class="ticons">
+      <svg class="ti ti-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="8.2"/>
+        <path d="M12 3.8a8.2 8.2 0 000 16.4z" fill="currentColor" stroke="none"/>
+      </svg>
+      <svg class="ti ti-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4.4" fill="currentColor" stroke="none"/>
+        <path d="M12 2.4v2.3M12 19.3v2.3M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.4 12h2.3M19.3 12h2.3M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/>
+      </svg>
+      <svg class="ti ti-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.5 14.3A8.6 8.6 0 019.7 3.5a8.6 8.6 0 1010.8 10.8z" fill="currentColor" stroke="none"/>
+      </svg>
+    </span>
+    <span class="tlabel" id="theme-label"></span>
+  </button>
+
+  <div class="scroll centred stagger" style="padding-top:calc(var(--sat) + 28px)">
+    <div class="applogo" aria-hidden="true">
+      <svg viewBox="0 0 48 48" fill="none" stroke-linecap="round">
+        <!-- The sending screen -->
+        <rect x="5" y="30" width="13" height="13" rx="3.8" fill="currentColor"/>
+        <!-- Light leaving it -->
+        <path d="M11.5 23.5A13 13 0 0 1 24.5 36.5" stroke="currentColor" stroke-width="4.1"/>
+        <path d="M11.5 15A21.5 21.5 0 0 1 33 36.5" stroke="currentColor" stroke-width="3.7" opacity=".62"/>
+        <path d="M11.5 6.5A30 30 0 0 1 41.5 36.5" stroke="currentColor" stroke-width="3.3" opacity=".32"/>
+        <!-- The receiving aperture -->
+        <circle cx="35.5" cy="12.5" r="7.6" stroke="currentColor" stroke-width="3.4"/>
+        <circle cx="35.5" cy="12.5" r="2.7" fill="currentColor"/>
+      </svg>
+    </div>
+    <h1 class="t-large" style="margin:0 0 6px">Lumen</h1>
+    <p class="t-sub dim" style="margin:0 0 26px">
+      Move a file between two devices on light alone. No network, no cable, no account.
+    </p>
+
+    <button class="opt" id="go-send">
+      <span class="glyph g-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+      <span>
+        <span class="t-head" style="display:block">Send a file</span>
+        <span class="t-foot dim">Use this on the larger screen</span>
+      </span>
+      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
+    </button>
+
+    <button class="opt" id="go-recv">
+      <span class="glyph g-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9V7a2 2 0 012-2h2M17 5h2a2 2 0 012 2v2M21 15v2a2 2 0 01-2 2h-2M7 19H5a2 2 0 01-2-2v-2"/><circle cx="12" cy="12" r="3.2"/></svg></span>
+      <span>
+        <span class="t-head" style="display:block">Receive a file</span>
+        <span class="t-foot dim">Use this on the phone</span>
+      </span>
+      <span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
+    </button>
+
+    <div id="caps" style="margin-top:16px"></div>
+    <div id="history-slot"></div>
+
+    <div class="acc" id="acc-share">
+      <button class="acc-h" aria-expanded="false">
+        <span class="lbl">Share this app</span>
+        <span class="sum" id="share-sum">One file, no setup</span>
+        <svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <div class="acc-b"><div class="acc-i">
+        <p>This whole app is <b>one HTML file</b>. Send it to anyone — AirDrop, Quick Share, WhatsApp, email, USB. No install, no archive to extract, no server, no account, and <b>no shared network</b>.</p>
+        <p>They can pass it on to someone else too. Lumen copies itself.</p>
+        <div class="note warn" id="ios-tip" hidden style="display:block;margin:12px 0">
+          <b>Sending to an iPhone?</b> Don't send the file — send the <b>link</b>.
+          iOS sandboxes every app, so nothing can hand a local file to Safari; the share
+          sheet only ever offers Notes, Mail and the like, and tapping the file in Files
+          shows a <i>preview</i> that can't run apps. Point the iPhone's <b>Camera</b> at
+          a QR of the address below and it opens in Safari directly.
+        </div>
+        <button class="btn" id="share-app" style="margin:12px 0 8px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+          <span id="share-label">Share a copy</span>
+        </button>
+        <button class="btn secondary" id="download-app" style="margin-bottom:12px">Save a copy instead</button>
+        <div id="beam-card" hidden style="text-align:center">
+          <div class="t-cap dim3" style="margin-bottom:8px">Or let them scan this to fetch it once</div>
+          <canvas id="beam" style="max-width:100%;image-rendering:pixelated;border-radius:10px"></canvas>
+          <div class="t-cap dim3 num" id="beam-url" style="margin-top:8px;word-break:break-all"></div>
+        </div>
+        <div id="host-card" hidden>
+          <div class="hair"></div>
+          <p class="t-foot" style="margin:0 0 10px"><b>Get it onto an iPhone</b><br>
+            iOS won't hand a local file to Safari, so you need a <b>link</b> — and for the
+            camera to work it must be <b>https</b>. Plain
+            <span class="num">http://192.168…</span> will load Lumen but leave the
+            receiver's camera blocked.</p>
+
+          <p class="t-foot" style="margin:10px 0 6px"><b>Easiest</b> — open the permanent
+            copy and add it to the Home Screen:</p>
+          <div class="cmd">https://tejaswimsft.github.io/lumen/</div>
+
+          <p class="t-foot" style="margin:12px 0 6px"><b>Your own https, no account</b> —
+            run these where this file lives; the second prints an
+            <span class="num">https://…trycloudflare.com</span> address:</p>
+          <div class="cmd">npx serve . -l 8000</div>
+          <div class="cmd">cloudflared tunnel --url http://localhost:8000</div>
+
+          <p class="t-cap dim3" style="margin:12px 0 0">Once open over https, tap
+            <b>Share ▸ Add to Home Screen</b>. It then launches like a native app and needs
+            no network ever again — the transfer itself never uses one.</p>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="acc" id="acc-check">
+      <button class="acc-h" aria-expanded="false">
+        <span class="lbl">Device check</span>
+        <span class="sum" id="check-sum">Tap to check</span>
+        <svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <div class="acc-b"><div class="acc-i">
+        <div id="check-rows"><p>Checks the camera, decoder and screen settings so there are no surprises later.</p></div>
+        <button class="btn secondary" id="run-check" style="margin-top:10px">Run check</button>
+      </div></div>
+    </div>
+
+    <div class="acc" id="acc-how">
+      <button class="acc-h" aria-expanded="false">
+        <span class="lbl">How to send a file</span>
+        <span class="sum">Four steps</span>
+        <svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <div class="acc-b"><div class="acc-i">
+        <p><b>1.</b> Open this file on both devices.</p>
+        <p><b>2.</b> On the device holding the file, tap <b>Send a file</b> and pick it. Turn the brightness up.</p>
+        <p><b>3.</b> On the other device, tap <b>Receive a file</b> and point its camera at the first screen.</p>
+        <p><b>4.</b> Hold steady. When it says complete, tap <b>Save</b>, then <b>Stop</b> on the sender.</p>
+        <p style="margin-top:10px">The transfer is <b>pure light</b> — nothing crosses a network, so both devices can be in airplane mode. Dropped frames repair themselves, so a wobble costs a moment, not the transfer.</p>
+      </div></div>
+    </div>
+
+    <div class="hair"></div>
+
+    <footer class="t-cap dim3" style="text-align:center;line-height:1.7;margin-top:24px;padding-bottom:8px">
+      QR Code® DENSO WAVE · LT codes, M. Luby · Base45, RFC 9285
+      <br>Vibe coded by <b>Tejaswi</b> · Made with <span style="color:var(--red)">❤️</span> and <b>Microsoft Scout</b>
+    </footer>
+  </div>
+</section>
+
+<!-- ══════════════ SEND SETUP ══════════════ -->
+<section class="view" id="view-send">
+  <div class="nav">
+    <button class="iconbtn" data-back="view-role"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Back</button>
+    <span class="t-head">Send</span>
+  </div>
+  <div class="scroll">
+    <input type="file" id="file" hidden>
+    <div class="drop" id="drop">
+      <span class="glyph g-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg></span>
+      <div class="t-head">Choose a file</div>
+      <div class="t-foot dim" style="margin-top:3px">or drag one here</div>
+    </div>
+
+    <div id="fileinfo" hidden></div>
+
+    <div class="card" id="qualitycard" hidden>
+      <div class="t-head" style="margin-bottom:4px">Transmission speed</div>
+      <div class="t-foot dim" style="margin-bottom:13px">Faster codes are denser and need a steadier hand.</div>
+      <div class="seg" id="seg-speed">
+        <div class="thumb"></div>
+        <button data-v="0" aria-selected="false">Steady</button>
+        <button data-v="1" aria-selected="true">Balanced</button>
+        <button data-v="2" aria-selected="false">Fast</button>
+      </div>
+      <div class="hair"></div>
+      <div class="row" style="justify-content:space-between"><span class="t-sub dim">Estimated time</span><span class="t-sub num" id="est">—</span></div>
+      <div class="row" style="justify-content:space-between;margin-top:7px"><span class="t-sub dim">Throughput</span><span class="t-sub num dim" id="thru">—</span></div>
+    </div>
+
+    <div class="note" id="prep-note" hidden style="margin-bottom:14px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5M12 16.2v.1"/></svg>
+      <span>Turn this screen's brightness up and keep it still. The phone does all the work — watch progress <b>there</b>, then press Stop here once it says complete.</span>
+    </div>
+
+    <button class="btn" id="start" disabled>Start transmitting</button>
+  </div>
+</section>
+
+<!-- ══════════════ TRANSMITTING ══════════════ -->
+<section class="view" id="view-tx">
+  <div class="txtop">
+    <span class="name" id="tx-name">—</span>
+    <span class="tag" id="tx-tag">—</span>
+  </div>
+  <div class="qrwrap">
+    <div class="qrstage">
+      <div class="qrcard"><canvas id="qr"></canvas></div>
+      <div class="hud"><i></i><i></i><i></i><i></i><b></b></div>
+    </div>
+  </div>
+  <div class="txbar">
+    <span class="pulse" id="tx-dot"></span>
+    <span class="num" id="tx-stat">—</span>
+    <span class="spacer"></span>
+    <button class="btn" id="tx-pause">Pause</button>
+    <button class="btn" id="tx-stop">Stop</button>
+  </div>
+</section>
+
+<!-- ══════════════ RECEIVE ══════════════ -->
+<section class="view camview" id="view-recv">
+  <video id="cam" playsinline muted autoplay></video>
+  <div class="camlayer">
+    <div class="nav">
+      <button class="iconbtn" id="recv-back" style="color:#fff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Back</button>
+    </div>
+
+    <div class="reticle" id="reticle"><i></i><i></i><i></i><i></i></div>
+
+    <div class="spacer" style="flex:1"></div>
+    <div class="pill" id="aim-pill" style="margin-bottom:calc(28px + var(--sab))">
+      <span class="pulse" style="background:var(--blue)"></span><span id="aim-txt">Starting camera…</span>
+    </div>
+
+    <div class="sheet hidden" id="recv-sheet">
+      <div class="row" style="gap:18px;align-items:center">
+        <div class="ringwrap">
+          <svg class="ring" viewBox="0 0 168 168"><circle class="track" cx="84" cy="84" r="77"/><circle class="fill" id="ring" cx="84" cy="84" r="77"/></svg>
+          <div class="ringtxt"><div class="t-title num" id="pct">0%</div><div class="t-cap dim" id="blocks">—</div></div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="t-head" id="rname" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+          <div class="t-foot dim" id="rsize" style="margin-bottom:12px">—</div>
+          <div class="spark" id="spark"></div>
+          <div class="t-foot dim num" id="rrate" style="margin-top:8px">—</div>
+          <div class="t-foot dim num" id="reta">—</div>
+        </div>
+      </div>
+      <button class="btn danger" id="recv-cancel" style="margin-top:20px">Cancel</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ DONE ══════════════ -->
+<section class="view" id="view-done">
+  <div class="scroll centred" style="padding-top:calc(var(--sat) + 20px)">
+    <div class="check"><svg viewBox="0 0 48 48"><path d="M14 24.5l7 7 13-14"/></svg></div>
+    <h2 class="t-title" style="text-align:center;margin:22px 0 4px">Transfer complete</h2>
+    <p class="t-sub dim" style="text-align:center;margin:0 0 4px" id="dname">—</p>
+    <p class="t-foot dim3" style="text-align:center;margin:0 0 26px" id="dmeta">—</p>
+    <button class="btn" id="save">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 18v1a2 2 0 002 2h12a2 2 0 002-2v-1"/></svg>
+      Save to this device
+    </button>
+    <button class="btn ghost" id="toggle-stats" style="margin-top:8px">Transfer details</button>
+    <div id="stats-panel" hidden></div>
+    <button class="btn ghost" id="again" style="margin-top:4px">Receive another</button>
+  </div>
+</section>
+
+<script>
+/*__QR_JS__*/
+/*__FOUNTAIN_JS__*/
+/*__QRDECODE_JS__*/
+
+(function(){
+'use strict';
+
+/* Capture our own source FIRST, while the preview warning is still in the
+   DOM, so every copy we hand out carries that guidance too. A file:// page
+   cannot fetch its own bytes (CORS), so this snapshot is the only way. */
+const SELF_HTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+/* Scripts are evidently running, so the warning is unnecessary here.
+   Removed early, before any other code could throw and leave the app
+   looking broken behind it. */
+(function(){
+  var n = document.getElementById('nojs');
+  if(n && n.parentNode) n.parentNode.removeChild(n);
+})();
+
+/* Carry over settings from the app's former name so nobody loses history. */
+(function migrate(){
+  try{
+    for(const [from, to] of [['qrs-theme','lumen-theme'], ['qrs-history','lumen-history']]){
+      const old = localStorage.getItem(from);
+      if(old !== null && localStorage.getItem(to) === null) localStorage.setItem(to, old);
+      if(old !== null) localStorage.removeItem(from);
+    }
+  }catch(e){}
+})();
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+/* ============================================================
+   Presets — QR version, ECC and frame rate per speed setting.
+   Block sizes are derived from real alphanumeric capacity.
+   ============================================================ */
+const PRESETS = [
+  { name:'Steady',   ver:14, ecl:QR.ECL.M, fps:8  },
+  { name:'Balanced', ver:20, ecl:QR.ECL.M, fps:12 },
+  { name:'Fast',     ver:26, ecl:QR.ECL.M, fps:15 }
+];
+PRESETS.forEach(p => {
+  p.chars = QR.capacityAlnum(p.ver, p.ecl);
+  p.payload = Fountain.bytesForChars(p.chars);
+  p.block = p.payload - 9;              // droplet header: type + id + seed
+});
+
+const DROPLET_HEADER = 9;
+const MANIFEST_EVERY = 12;
+
+/* ============================================================
+   Theme — "Auto" follows the OS. Note that on Windows, browsers
+   follow the *app* colour setting, not the *system* one; the
+   resolved value is surfaced so this is never a mystery.
+   ============================================================ */
+const darkQuery = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+
+const Theme = {
+  pref:'auto',
+  order:['auto','light','dark'],
+  labelTimer:0,
+  resolved(){
+    if(this.pref !== 'auto') return this.pref;
+    return darkQuery && darkQuery.matches ? 'dark' : 'light';
+  },
+  set(v, announce){
+    this.pref = v;
+    if(v === 'auto') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', v);
+    try{ localStorage.setItem('lumen-theme', v); }catch(e){}
+    this.paint(announce);
+  },
+  cycle(){
+    const next = this.order[(this.order.indexOf(this.pref) + 1) % this.order.length];
+    this.set(next, true);
+    FX.buzz(8);
+  },
+  paint(announce){
+    const r = this.resolved();
+    const btn = $('#theme-cycle');
+    if(btn){
+      btn.dataset.mode = this.pref;
+      btn.setAttribute('aria-label',
+        this.pref === 'auto'
+          ? `Appearance: automatic, currently ${r}`
+          : `Appearance: ${this.pref}`);
+      const label = $('#theme-label');
+      if(label){
+        label.textContent = this.pref === 'auto' ? 'Auto'
+                          : this.pref === 'light' ? 'Light' : 'Dark';
+        if(announce){
+          btn.classList.add('show-label');
+          clearTimeout(this.labelTimer);
+          this.labelTimer = setTimeout(() => btn.classList.remove('show-label'), 1500);
+        }
+      }
+    }
+    const meta = $('#theme-color');
+    if(meta) meta.setAttribute('content', r === 'dark' ? '#000000' : '#F2F2F7');
+  },
+  init(){
+    let v = 'auto';
+    try{ v = localStorage.getItem('lumen-theme') || 'auto'; }catch(e){}
+    this.set(v, false);
+    // React live if the OS flips while the app is open.
+    if(darkQuery){
+      const onChange = () => this.paint(false);
+      if(darkQuery.addEventListener) darkQuery.addEventListener('change', onChange);
+      else if(darkQuery.addListener) darkQuery.addListener(onChange);
+    }
+  }
+};
+
+/* Measured rather than computed in percentages, so the thumb lands exactly. */
+function moveThumb(seg){
+  const thumb = seg.querySelector('.thumb');
+  if(!thumb) return;
+  const btns = Array.from(seg.querySelectorAll('button'));
+  const sel = btns.find(b => b.getAttribute('aria-selected') === 'true') || btns[0];
+  if(!sel || !sel.offsetWidth) return;
+  thumb.style.width = sel.offsetWidth + 'px';
+  thumb.style.transform = `translateX(${sel.offsetLeft}px)`;
+}
+
+/* ============================================================
+   View router
+   ============================================================ */
+let current = 'view-role';
+function go(id){
+  if(id === current) return;
+  const from = document.getElementById(current);
+  const to = document.getElementById(id);
+  from.classList.add('leaving');
+  from.classList.remove('active');
+  setTimeout(() => from.classList.remove('leaving'), 400);
+  to.classList.add('active');
+  current = id;
+  requestAnimationFrame(() => $$('.seg').forEach(moveThumb));
+}
+
+/* ============================================================
+   Feedback: audio ticks + haptics
+   ============================================================ */
+const FX = {
+  ctx:null,
+  arm(){ if(!this.ctx){ try{ this.ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } 
+         if(this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+  blip(progress){
+    if(!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(680 + progress * 620, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.075, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.055);
+    o.connect(g).connect(this.ctx.destination);
+    o.start(t); o.stop(t + 0.06);
+  },
+  chime(){
+    if(!this.ctx) return;
+    [0, 0.11, 0.22].forEach((d, i) => {
+      const t = this.ctx.currentTime + d;
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime([784, 1046.5, 1318.5][i], t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.13, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+      o.connect(g).connect(this.ctx.destination);
+      o.start(t); o.stop(t + 0.45);
+    });
+  },
+  buzz(p){
+    // Browsers reject vibrate before a user gesture; stay silent until then.
+    if(!this.tapped) return;
+    try{ navigator.vibrate && navigator.vibrate(p); }catch(e){}
+  },
+  tapped:false
+};
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+const fmtBytes = n => n < 1024 ? n + ' B'
+  : n < 1048576 ? (n/1024).toFixed(n < 10240 ? 1 : 0) + ' KB'
+  : (n/1048576).toFixed(2) + ' MB';
+
+function fmtTime(s){
+  if(!isFinite(s) || s < 0) return '—';
+  if(s < 60) return Math.ceil(s) + ' s';
+  const m = Math.floor(s/60);
+  return m + ' min ' + Math.round(s%60) + ' s';
+}
+
+async function gzip(bytes){
+  if(typeof CompressionStream === 'undefined') return null;
+  try{
+    const cs = new CompressionStream('gzip');
+    const w = cs.writable.getWriter();
+    w.write(bytes); w.close();
+    const buf = await new Response(cs.readable).arrayBuffer();
+    return new Uint8Array(buf);
+  }catch(e){ return null; }
+}
+async function gunzip(bytes){
+  const ds = new DecompressionStream('gzip');
+  const w = ds.writable.getWriter();
+  w.write(bytes); w.close();
+  return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+}
+
+/* Wake lock, so the sending screen never sleeps mid-stream. */
+let wakeLock = null;
+async function keepAwake(on){
+  try{
+    if(on && 'wakeLock' in navigator){ wakeLock = await navigator.wakeLock.request('screen'); }
+    else if(wakeLock){ await wakeLock.release(); wakeLock = null; }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && (current === 'view-tx' || current === 'view-recv')) keepAwake(true);
+});
+
+/* ============================================================
+   Metrics — measured on the receiver, stored only on this device.
+   Nothing here is ever transmitted anywhere.
+   ============================================================ */
+const Metrics = {
+  device(){
+    const nav = navigator;
+    const ua = nav.userAgent;
+    let os = 'Unknown';
+    if(/Windows NT/.test(ua)) os = 'Windows';
+    else if(/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+    else if(/Android/.test(ua)) os = 'Android';
+    else if(/Mac OS X/.test(ua)) os = 'macOS';
+    else if(/Linux/.test(ua)) os = 'Linux';
+    let browser = 'Unknown';
+    if(/Edg\//.test(ua)) browser = 'Edge';
+    else if(/OPR\//.test(ua)) browser = 'Opera';
+    else if(/Chrome\//.test(ua) && !/Chromium/.test(ua)) browser = 'Chrome';
+    else if(/Firefox\//.test(ua)) browser = 'Firefox';
+    else if(/Safari\//.test(ua)) browser = 'Safari';
+    return {
+      os, browser,
+      screen: `${screen.width}×${screen.height}`,
+      dpr: (window.devicePixelRatio || 1).toFixed(2),
+      cores: nav.hardwareConcurrency || null,
+      memoryGB: nav.deviceMemory || null,
+      touch: (nav.maxTouchPoints || 0) > 0
+    };
+  },
+
+  summarise(rx){
+    const m = rx.meta, d = rx.dec;
+    const elapsed = (rx.finishedAt - rx.lockedAt) / 1000;
+    const goodput = elapsed > 0 ? m.s / elapsed : 0;
+    const wire = elapsed > 0 ? (rx.newDroplets * m.b) / elapsed : 0;
+    const track = rx.stream && rx.stream.getVideoTracks()[0];
+    const settings = track && track.getSettings ? track.getSettings() : {};
+    return {
+      at: Date.now(),
+      file: { name:m.n, type:m.t || 'unknown', bytes:m.s,
+              wireBytes:m.l, compressed:!!m.z,
+              ratio: m.z ? +(m.l / m.s).toFixed(3) : 1 },
+      coding: { blocks:d.K, blockBytes:m.b, qrVersion:rx.qrVersion || null,
+                dropletsUsed:rx.newDroplets, redundant:rx.dupDroplets,
+                overhead:+(rx.newDroplets / d.K).toFixed(3) },
+      timing: { seconds:+elapsed.toFixed(2),
+                goodputBps:Math.round(goodput), wireBps:Math.round(wire),
+                peakBlocksPerSec:+rx.peakRate.toFixed(1),
+                framesSeen:rx.framesSeen, decodeSuccess:rx.decodeHits,
+                decodeRate: rx.framesSeen ? +(rx.decodeHits / rx.framesSeen).toFixed(3) : 0 },
+      receiver: Object.assign(this.device(), {
+        engine: rx.engine || 'unknown',
+        decodeMs: rx.decodeMs ? +rx.decodeMs.toFixed(1) : null,
+        camera: settings.width ? `${settings.width}×${settings.height}` : 'unknown',
+        cameraFps: settings.frameRate ? Math.round(settings.frameRate) : null
+      }),
+      integrity: rx.integrityOk ? 'verified' : 'checksum mismatch'
+    };
+  },
+
+  save(rec){
+    try{
+      const all = JSON.parse(localStorage.getItem('lumen-history') || '[]');
+      all.unshift(rec);
+      localStorage.setItem('lumen-history', JSON.stringify(all.slice(0, 25)));
+    }catch(e){}
+  },
+  load(){
+    try{ return JSON.parse(localStorage.getItem('lumen-history') || '[]'); }
+    catch(e){ return []; }
+  },
+  clear(){ try{ localStorage.removeItem('lumen-history'); }catch(e){} }
+};
+
+function statsRows(s){
+  const kv = (k, v) => `<div class="kv"><span>${k}</span><span>${v}</span></div>`;
+  const pct = n => (n * 100).toFixed(1) + '%';
+  const group = (title, summary, body) => `
+    <div class="acc">
+      <button class="acc-h" aria-expanded="false">
+        <span class="lbl">${title}</span><span class="sum">${summary}</span>
+        <svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <div class="acc-b"><div class="acc-i">${body}</div></div>
+    </div>`;
+
+  return group('File', fmtBytes(s.file.bytes),
+      kv('Name', escapeHtml(s.file.name)) +
+      kv('Type', escapeHtml(s.file.type)) +
+      kv('Size', fmtBytes(s.file.bytes)) +
+      kv('Over the wire', fmtBytes(s.file.wireBytes) +
+        (s.file.compressed ? ` (${pct(s.file.ratio)})` : ' (uncompressed)')) +
+      kv('Integrity', s.integrity === 'verified'
+          ? '<span style="color:var(--green)">✓ verified</span>'
+          : '<span style="color:var(--red)">⚠ mismatch</span>'))
+  + group('Speed', `${fmtTime(s.timing.seconds)} · ${fmtBytes(s.timing.goodputBps)}/s`,
+      kv('Duration', fmtTime(s.timing.seconds)) +
+      kv('Effective rate', fmtBytes(s.timing.goodputBps) + '/s') +
+      kv('Channel rate', fmtBytes(s.timing.wireBps) + '/s') +
+      kv('Peak', s.timing.peakBlocksPerSec + ' blocks/sec') +
+      kv('Frames seen', s.timing.framesSeen.toLocaleString()) +
+      kv('Frames decoded', s.timing.decodeSuccess.toLocaleString() + ' (' + pct(s.timing.decodeRate) + ')'))
+  + group('Coding', s.coding.overhead + '× overhead',
+      kv('QR version', s.coding.qrVersion ? 'v' + s.coding.qrVersion : '—') +
+      kv('Source blocks', s.coding.blocks + ' × ' + s.coding.blockBytes + ' B') +
+      kv('Droplets used', s.coding.dropletsUsed.toLocaleString()) +
+      kv('Redundant', s.coding.redundant.toLocaleString()) +
+      kv('Fountain overhead', s.coding.overhead + '×'))
+  + group('Device', s.receiver.os + ' · ' + s.receiver.browser,
+      kv('System', s.receiver.os + ' · ' + s.receiver.browser) +
+      kv('Screen', s.receiver.screen + ' @' + s.receiver.dpr + '×') +
+      kv('Camera', s.receiver.camera + (s.receiver.cameraFps ? ' @' + s.receiver.cameraFps + 'fps' : '')) +
+      kv('Decode engine', s.receiver.engine) +
+      (s.receiver.decodeMs ? kv('Decode time', s.receiver.decodeMs + ' ms/frame') : '') +
+      (s.receiver.cores ? kv('CPU threads', s.receiver.cores) : '') +
+      `<p class="t-cap dim3" style="margin:10px 0 0">Measured locally. Never transmitted.</p>`);
+}
+
+function renderHistory(){
+  const slot = $('#history-slot');
+  const all = Metrics.load();
+  if(!all.length){ slot.innerHTML = ''; return; }
+  const totalBytes = all.reduce((a, r) => a + r.file.bytes, 0);
+  const avgRate = all.reduce((a, r) => a + r.timing.goodputBps, 0) / all.length;
+  slot.innerHTML = `
+    <div class="acc">
+      <button class="acc-h" aria-expanded="false">
+        <span class="lbl">Recent transfers</span>
+        <span class="sum">${all.length} · ${fmtBytes(totalBytes)} · ${fmtBytes(avgRate)}/s</span>
+        <svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+      <div class="acc-b"><div class="acc-i">
+        ${all.slice(0, 8).map(r => `
+          <div class="row" style="justify-content:space-between;gap:10px;padding:6px 0">
+            <span style="min-width:0;flex:1">
+              <span class="t-sub" style="display:block;color:var(--label);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.file.name)}</span>
+              <span class="t-cap dim3 num">${new Date(r.at).toLocaleString()} · ${fmtBytes(r.file.bytes)}</span>
+            </span>
+            <span class="t-cap num dim" style="text-align:right;white-space:nowrap">
+              ${fmtTime(r.timing.seconds)}<br>${fmtBytes(r.timing.goodputBps)}/s
+            </span>
+          </div>`).join('')}
+        <button class="btn danger" id="clear-history" style="margin-top:12px;height:40px;font-size:15px">Clear history</button>
+      </div></div>
+    </div>`;
+  wireAccordions(slot);
+  const btn = $('#clear-history');
+  if(btn) btn.addEventListener('click', () => { Metrics.clear(); renderHistory(); });
+}
+
+/* Collapsibles: measured height so the animation is smooth, recomputed
+   when content changes underneath (nested sections opening). */
+function wireAccordions(root){
+  (root || document).querySelectorAll('.acc').forEach(acc => {
+    if(acc.dataset.wired) return;
+    acc.dataset.wired = '1';
+    const head = acc.querySelector('.acc-h');
+    const body = acc.querySelector('.acc-b');
+    head.addEventListener('click', () => {
+      const open = !acc.classList.contains('open');
+      acc.classList.toggle('open', open);
+      head.setAttribute('aria-expanded', String(open));
+      body.style.maxHeight = open ? body.scrollHeight + 'px' : '0px';
+      FX.buzz(open ? 8 : 5);
+      // Grow any ancestor that is itself open.
+      let parent = acc.parentElement && acc.parentElement.closest('.acc-b');
+      while(parent){
+        parent.style.maxHeight = parent.scrollHeight + 'px';
+        parent = parent.parentElement && parent.parentElement.closest('.acc-b');
+      }
+      // If opening pushed content below the fold, bring it into view.
+      if(open){
+        setTimeout(() => {
+          const scroller = acc.closest('.scroll');
+          if(!scroller) return;
+          const a = acc.getBoundingClientRect();
+          const s = scroller.getBoundingClientRect();
+          if(a.bottom > s.bottom - 8){
+            const delta = Math.min(a.bottom - s.bottom + 16, a.top - s.top - 12);
+            if(delta > 0) scroller.scrollBy({ top:delta,
+              behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' });
+          }
+        }, 260);
+      }
+    });
+  });
+}
+/* ============================================================
+   Self-replication — the app hands out working copies of itself.
+   No hosting, no archive, no server; just one HTML file.
+   ============================================================ */
+const APP_FILENAME = 'lumen.html';
+
+const SelfShare = {
+  blob(){ return new Blob([SELF_HTML], { type:'text/html' }); },
+  file(){
+    try{ return new File([SELF_HTML], APP_FILENAME, { type:'text/html' }); }
+    catch(e){ return null; }
+  },
+  canShareFile(){
+    const f = this.file();
+    return !!(f && navigator.canShare && navigator.canShare({ files:[f] }) && navigator.share);
+  },
+  async share(){
+    const f = this.file();
+    if(!f) return this.download();
+    try{
+      await navigator.share({
+        files:[f],
+        title:'Lumen',
+        text:'Open this file on your phone to send and receive files by camera. No internet needed.'
+      });
+      return 'shared';
+    }catch(e){
+      if(e && e.name === 'AbortError') return 'cancelled';
+      this.download();
+      return 'downloaded';
+    }
+  },
+  download(){
+    const url = URL.createObjectURL(this.blob());
+    const a = document.createElement('a');
+    a.href = url; a.download = APP_FILENAME;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return 'downloaded';
+  }
+};
+
+/* ============================================================
+   Readiness self-test — turns "will this work?" into a fact,
+   before the user is standing in front of someone else's screen.
+   ============================================================ */
+async function runSelfTest(){
+  const rows = [];
+  const add = (name, state, detail) => rows.push({ name, state, detail });
+
+  add('Secure origin', CAPS.secure ? 'ok' : 'fail',
+      CAPS.secure ? location.protocol === 'file:' ? 'Local file' : location.protocol.replace(':','')
+                  : `${location.protocol.replace(':','')} — camera blocked, needs https`);
+
+  add('Compression', CAPS.gzip ? 'ok' : 'warn',
+      CAPS.gzip ? 'gzip available' : 'Files sent uncompressed');
+
+  add('Decode engine', 'ok', CAPS.barcode ? 'Native (hardware)' : 'Built-in');
+
+  add('Screen wake lock', 'wakeLock' in navigator ? 'ok' : 'warn',
+      'wakeLock' in navigator ? 'Screen stays on' : 'Screen may sleep mid-transfer');
+
+  add('Appearance', 'ok',
+      Theme.pref === 'auto'
+        ? (darkQuery ? `Auto — browser reports ${darkQuery.matches ? 'dark' : 'light'}`
+                     : 'Auto — no system preference reported')
+        : `Locked to ${Theme.pref}`);
+
+  add('Scripts', 'ok',
+      IS_STANDALONE ? 'Running as an installed app'
+                    : location.protocol === 'file:' ? 'Running from a local file'
+                    : 'Running in a browser');
+
+  add('Share to another device', SelfShare.canShareFile() ? 'ok' : 'warn',
+      SelfShare.canShareFile() ? 'Direct share available' : 'Download instead');
+
+  // Camera is the one that really matters, so actually open it.
+  if(!CAPS.camera){
+    add('Camera', 'fail', 'Not available — this device can only send');
+  }else{
+    let stream = null;
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({
+        video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 } }, audio:false
+      });
+      const t = stream.getVideoTracks()[0];
+      const s = t.getSettings ? t.getSettings() : {};
+      const px = s.width && s.height ? s.width * s.height : 0;
+      add('Camera', px && px < 640 * 480 ? 'warn' : 'ok',
+          s.width ? `${s.width}×${s.height}${s.frameRate ? ' @' + Math.round(s.frameRate) + 'fps' : ''}` : 'Available');
+    }catch(e){
+      add('Camera', 'fail', cameraHint(e));
+    }finally{
+      if(stream) stream.getTracks().forEach(t => t.stop());
+    }
+  }
+
+  // Prove the whole optical chain works, in memory.
+  try{
+    const probe = new Uint8Array(256);
+    for(let i = 0; i < probe.length; i++) probe[i] = (i * 31) & 255;
+    const text = Fountain.base45Encode(Fountain.encodeDroplet(1, 0, probe));
+    const q = QR.encode(text, { ecl:QR.ECL.M });
+    const cv = document.createElement('canvas');
+    const QUIET = 4, mod = 4, total = q.size + QUIET * 2;
+    cv.width = cv.height = total * mod;
+    const cx = cv.getContext('2d', { willReadFrequently:true });
+    cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
+    cx.fillStyle = '#000';
+    for(let y = 0; y < q.size; y++)
+      for(let x = 0; x < q.size; x++)
+        if(q.modules[y * q.size + x]) cx.fillRect((x + QUIET) * mod, (y + QUIET) * mod, mod, mod);
+    const t0 = performance.now();
+    const img = cx.getImageData(0, 0, cv.width, cv.height);
+    const back = QRDecode.decode(img.data, cv.width, cv.height);
+    const ms = performance.now() - t0;
+    const f = back ? Fountain.parseFrame(Fountain.base45Decode(back)) : null;
+    const ok = !!(f && f.type === 'droplet' && f.seed === 0);
+    add('Encode → decode', ok ? 'ok' : 'fail',
+        ok ? `Round trip verified in ${ms.toFixed(0)} ms` : 'Self-check failed');
+  }catch(e){
+    add('Encode → decode', 'fail', e.message);
+  }
+
+  return rows;
+}
+
+function cameraHint(e){
+  const n = e && e.name;
+  if(n === 'NotAllowedError' || n === 'PermissionDeniedError')
+    return 'Permission denied — allow camera for this page, and check your OS camera privacy setting';
+  if(n === 'NotFoundError' || n === 'DevicesNotFoundError')
+    return 'No camera found on this device';
+  if(n === 'NotReadableError' || n === 'TrackStartError')
+    return 'Camera is in use by another app — close it and retry';
+  if(n === 'SecurityError')
+    return 'Blocked by browser security — open over https or as a local file';
+  if(n === 'OverconstrainedError')
+    return 'No camera matched the requested settings';
+  return (n || 'Camera unavailable');
+}
+
+function renderSelfTest(rows){
+  const dot = s => s === 'ok'
+    ? '<span style="color:var(--green)">✓</span>'
+    : s === 'warn' ? '<span style="color:var(--orange)">!</span>'
+                   : '<span style="color:var(--red)">✕</span>';
+  return rows.map(r => `<div class="kv">
+      <span>${dot(r.state)} ${r.name}</span><span>${escapeHtml(r.detail)}</span></div>`).join('');
+}
+/* ============================================================
+   Capability probe
+   ============================================================ */
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+               (navigator.platform === 'MacIntel' && (navigator.maxTouchPoints || 0) > 1);
+const IS_STANDALONE = window.matchMedia('(display-mode: standalone)').matches ||
+                      navigator.standalone === true;
+
+const CAPS = {
+  camera: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+  barcode: typeof window.BarcodeDetector !== 'undefined',
+  gzip: typeof CompressionStream !== 'undefined',
+  secure: window.isSecureContext
+};
+function renderCaps(){
+  const el = $('#caps');
+  const msgs = [];
+  if(!CAPS.camera) msgs.push(['warn','This browser exposes no camera, so it can only send.']);
+  if(!CAPS.gzip) msgs.push(['','Compression is unavailable here; files will be sent uncompressed.']);
+
+  // On iPhone, running from Safari rather than the Home Screen means the app
+  // can vanish behind a tab. Suggest installing it once.
+  if(IS_IOS && !IS_STANDALONE && location.protocol !== 'file:'){
+    msgs.push(['','<b>Add Lumen to your Home Screen</b> — tap <b>Share</b>, then '
+      + '<b>Add to Home Screen</b>. It then opens instantly and works with no internet at all.']);
+  }
+  el.innerHTML = msgs.map(([c,t]) =>
+    `<div class="note ${c}" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v5M12 16.2v.1"/></svg><span>${t}</span></div>`
+  ).join('');
+}
+
+/* ============================================================
+   SENDER
+   ============================================================ */
+const TX = {
+  file:null, buf:null, gz:false, preset:1, enc:null, meta:null,
+  raf:0, timer:0, watchdog:0, emitted:[],
+  active:false, paused:false, frame:0, cycles:0,
+
+  async pick(file){
+    if(!file) return;
+    this.file = file;
+    $('#drop').hidden = true;
+    $('#fileinfo').hidden = false;
+    $('#fileinfo').innerHTML =
+      `<div class="card fade-in"><div class="row">
+        <span class="glyph g-blue" style="width:44px;height:44px;border-radius:13px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
+        </span>
+        <span style="flex:1;min-width:0">
+          <span class="t-head" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(file.name)}</span>
+          <span class="t-foot dim" id="prep">Preparing…</span>
+        </span>
+        <button class="iconbtn" id="change" style="min-width:auto;font-size:15px">Change</button>
+      </div></div>`;
+    $('#change').addEventListener('click', () => $('#file').click());
+
+    const raw = new Uint8Array(await file.arrayBuffer());
+    const packed = await gzip(raw);
+    this.gz = !!(packed && packed.length < raw.length);
+    this.buf = this.gz ? packed : raw;
+    this.crc = Fountain.crc32(raw);
+    this.rawLen = raw.length;
+
+    $('#prep').innerHTML = this.gz
+      ? `${fmtBytes(raw.length)} → <b>${fmtBytes(this.buf.length)}</b> compressed`
+      : fmtBytes(raw.length);
+
+    $('#qualitycard').hidden = false;
+    $('#prep-note').hidden = false;
+    $('#start').disabled = false;
+    this.estimate();
+  },
+
+  estimate(){
+    if(!this.buf) return;
+    const p = PRESETS[this.preset];
+    const K = Math.ceil(this.buf.length / p.block);
+    const frames = K * (1 + 1/MANIFEST_EVERY) * 1.15;   // manifests + fountain overhead
+    $('#est').textContent = fmtTime(frames / p.fps);
+    $('#thru').textContent = `${fmtBytes(p.block * p.fps)}/s · ${K} block${K === 1 ? '' : 's'}`;
+  },
+
+  async start(){
+    const p = PRESETS[this.preset];
+    this.enc = new Fountain.Encoder(this.buf, p.block);
+    this.meta = {
+      v:1,
+      i:(Math.random() * 0xffffffff) >>> 0,
+      n:this.file.name,
+      t:this.file.type || 'application/octet-stream',
+      s:this.rawLen,
+      z:this.gz ? 1 : 0,
+      c:this.crc,
+      k:this.enc.K,
+      b:p.block,
+      l:this.buf.length,
+      qv:p.ver
+    };
+    this.manifestText = Fountain.base45Encode(Fountain.encodeManifest(this.meta));
+    if(this.manifestText.length > p.chars){
+      alert('That filename is too long to fit in a manifest frame. Please shorten it.');
+      return;
+    }
+    this.frame = 0; this.cycles = 0; this.active = true; this.paused = false;
+    this.emitted = [];
+    if(this.timer){ clearInterval(this.timer); this.timer = 0; }
+    if(this.watchdog){ clearInterval(this.watchdog); this.watchdog = 0; }
+    $('#tx-pause').textContent = 'Pause';
+    $('#tx-dot').style.background = 'var(--green)';
+    $('#tx-name').textContent = this.file.name;
+    $('#tx-tag').textContent = `${fmtBytes(this.rawLen)} · ${this.enc.K} blocks · ${PRESETS[this.preset].block} B/frame`;
+    go('view-tx');
+    keepAwake(true);
+    await new Promise(r => setTimeout(r, 380));  // let the view settle before sizing
+    this.loop();
+  },
+
+  loop(){
+    const p = PRESETS[this.preset];
+    const interval = 1000 / p.fps;
+    let last = -1e9;
+    const rafStamps = [];
+
+    const tick = now => {
+      if(!this.active) return;
+      if(!this.paused && now - last >= interval){ last = now; this.render(p); }
+    };
+
+    const rafLoop = ts => {
+      if(!this.active || this.timer) return;
+      rafStamps.push(ts);
+      if(rafStamps.length > 24) rafStamps.shift();
+      tick(ts);
+      this.raf = requestAnimationFrame(rafLoop);
+    };
+    this.raf = requestAnimationFrame(rafLoop);
+
+    // requestAnimationFrame can be throttled — background tabs, power saving,
+    // remote/virtual displays. The sender has no back-channel, so a silent
+    // collapse would be invisible. Watch the real cadence and switch to a
+    // timer if rAF cannot sustain the target rate.
+    this.watchdog = setInterval(() => {
+      if(!this.active || this.timer || rafStamps.length < 3) return;
+      const span = rafStamps[rafStamps.length - 1] - rafStamps[0];
+      if(span < 700) return;
+      const rate = ((rafStamps.length - 1) / span) * 1000;
+      if(rate < p.fps * 1.05){
+        cancelAnimationFrame(this.raf);
+        this.timer = setInterval(() => tick(performance.now()), interval);
+      }
+    }, 1200);
+  },
+
+  render(p){
+    const n = this.frame++;
+    let text;
+    if(n < 2 || n % MANIFEST_EVERY === 0){
+      text = this.manifestText;
+    }else{
+      const d = this.enc.droplet();
+      if(d.seed > 0 && d.seed % this.enc.K === 0) this.cycles++;
+      text = Fountain.base45Encode(Fountain.encodeDroplet(this.meta.i, d.seed, d.data));
+    }
+    const q = QR.encode(text, { ecl:p.ecl, version:p.ver });
+    paint(q);
+
+    // Report the rate actually achieved, not the one we asked for.
+    const now = performance.now();
+    this.emitted.push(now);
+    if(this.emitted.length > 30) this.emitted.shift();
+    if(n % 6 === 0){
+      let fps = p.fps;
+      if(this.emitted.length > 4){
+        const span = this.emitted[this.emitted.length - 1] - this.emitted[0];
+        if(span > 0) fps = ((this.emitted.length - 1) / span) * 1000;
+      }
+      const slow = fps < p.fps * 0.75;
+      $('#tx-stat').textContent =
+        `v${p.ver} · ${fps.toFixed(fps < 10 ? 1 : 0)} fps${slow ? ' (slow)' : ''} · pass ${this.cycles + 1}`;
+      $('#tx-dot').style.background = slow ? 'var(--orange)' : 'var(--green)';
+    }
+  },
+
+  /* The sender has no back-channel, so it can never know the transfer
+     finished. It keeps looping until a human stops it. */
+  togglePause(){
+    this.paused = !this.paused;
+    $('#tx-pause').textContent = this.paused ? 'Resume' : 'Pause';
+    $('#tx-dot').style.background = this.paused ? 'var(--orange)' : 'var(--green)';
+    $('#tx-dot').style.animation = this.paused ? 'none' : '';
+    $('#view-tx').classList.toggle('paused', this.paused);
+    if(this.paused) $('#tx-stat').textContent = 'Paused — the receiver is waiting';
+    keepAwake(!this.paused);
+  },
+
+  stop(){
+    this.active = false;
+    this.paused = false;
+    $('#tx-pause').textContent = 'Pause';
+    $('#view-tx').classList.remove('paused');
+    cancelAnimationFrame(this.raf);
+    if(this.timer){ clearInterval(this.timer); this.timer = 0; }
+    if(this.watchdog){ clearInterval(this.watchdog); this.watchdog = 0; }
+    keepAwake(false);
+    go('view-send');
+  }
+};
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* Integer-scaled painting keeps module edges perfectly crisp. */
+const canvas = $('#qr');
+const ctx2d = canvas.getContext('2d', { alpha:false });
+function paint(q){
+  const QUIET = 4;
+  const total = q.size + QUIET * 2;
+  const wrap = $('.qrwrap');
+  const avail = Math.max(120, Math.min(wrap.clientWidth, wrap.clientHeight) - 28);
+  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
+
+  // Size in whole device pixels: crisp edges, and finer granularity than
+  // whole CSS pixels would give on a high-DPI display.
+  const devMod = Math.max(1, Math.floor((avail * dpr) / total));
+  if(canvas.width !== total * devMod){
+    canvas.width = canvas.height = total * devMod;
+    canvas.style.width = canvas.style.height = (total * devMod / dpr) + 'px';
+  }
+  ctx2d.fillStyle = '#fff';
+  ctx2d.fillRect(0, 0, canvas.width, canvas.height);
+  ctx2d.fillStyle = '#000';
+  for(let y = 0; y < q.size; y++){
+    for(let x = 0; x < q.size; x++){
+      if(q.modules[y * q.size + x])
+        ctx2d.fillRect((x + QUIET) * devMod, (y + QUIET) * devMod, devMod, devMod);
+    }
+  }
+}
+
+/* ============================================================
+   RECEIVER
+   ============================================================ */
+const RX = {
+  stream:null, det:null, dec:null, meta:null, running:false,
+  stamps:[], lastPct:-1, raf:0, result:null, sparkBars:[],
+  engine:null, qrVersion:null, stats:null, decodeMs:0,
+  lockedAt:0, finishedAt:0, newDroplets:0, dupDroplets:0,
+  framesSeen:0, decodeHits:0, peakRate:0, integrityOk:false,
+
+  async open(){
+    go('view-recv');
+    FX.arm();
+    this.reset();
+    if(!CAPS.secure){
+      const lan = location.protocol === 'http:';
+      this.say(lan
+        ? `Camera blocked — ${location.host} is plain http. Browsers only allow the camera over https. Open Lumen from an https link, then Add to Home Screen.`
+        : 'Camera needs a secure origin — https, localhost, or a local file', true);
+      return;
+    }
+    if(!CAPS.camera){ this.say('No camera available on this device', true); return; }
+
+    // Safari is stricter about constraints than Chromium: an unsatisfiable
+    // ideal can still fail, so fall back to progressively simpler requests.
+    const attempts = [
+      { video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 }, height:{ ideal:1080 } }, audio:false },
+      { video:{ facingMode:'environment' }, audio:false },
+      { video:true, audio:false }
+    ];
+    let lastErr = null;
+    for(const constraints of attempts){
+      try{ this.stream = await navigator.mediaDevices.getUserMedia(constraints); break; }
+      catch(e){ lastErr = e; }
+    }
+    if(!this.stream){ this.say(cameraHint(lastErr), true); return; }
+    const v = $('#cam');
+    v.srcObject = this.stream;
+    // iOS refuses to play inline without these, and autoplay needs muted.
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', '');
+    v.muted = true;
+    try{ await v.play(); }
+    catch(e){
+      // Safari occasionally needs a beat after the stream is attached.
+      await new Promise(r => setTimeout(r, 250));
+      try{ await v.play(); }catch(e2){}
+    }
+
+    // Continuous autofocus keeps a moving phone sharp on the sender's screen.
+    try{
+      const track = this.stream.getVideoTracks()[0];
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      if(caps.focusMode && caps.focusMode.includes('continuous'))
+        await track.applyConstraints({ advanced:[{ focusMode:'continuous' }] });
+    }catch(e){}
+
+    this.det = await makeDetector();
+    if(!this.det){ this.say('No QR decoder available in this browser', true); return; }
+
+    keepAwake(true);
+    this.running = true;
+    this.say('Point at the sending screen');
+    this.scan();
+  },
+
+  reset(){
+    this.dec = null; this.meta = null; this.stamps = []; this.lastPct = -1; this.result = null;
+    this.newDroplets = 0; this.dupDroplets = 0; this.framesSeen = 0; this.decodeHits = 0;
+    this.peakRate = 0; this.lockedAt = 0; this.finishedAt = 0;
+    this.integrityOk = false; this.stats = null; this.qrVersion = null;
+    $('#recv-sheet').classList.add('hidden');
+    $('#reticle').classList.remove('locked');
+    $('#view-recv').classList.remove('scanning');
+    $('#ring').style.strokeDashoffset = 483.8;
+    const sp = $('#spark');
+    sp.innerHTML = '';
+    this.sparkBars = [];
+    for(let i = 0; i < 22; i++){ const b = document.createElement('b'); b.style.height = '2px'; sp.appendChild(b); this.sparkBars.push(b); }
+  },
+
+  say(msg, warn){
+    $('#aim-txt').textContent = msg;
+    $('#aim-pill').classList.toggle('warn', !!warn);
+    // Long diagnostics need room to wrap.
+    $('#aim-pill').style.whiteSpace = msg.length > 42 ? 'normal' : 'nowrap';
+  },
+
+  scan(){
+    const v = $('#cam');
+    const work = document.createElement('canvas');
+    const wctx = work.getContext('2d', { willReadFrequently:true });
+
+    // Without requestVideoFrameCallback (Safari), rAF fires ~60x/sec while a
+    // software decode costs 15-25 ms. Decoding every frame would saturate a
+    // phone's main thread, so pace the work to what the device can sustain
+    // and never queue a second decode while one is running.
+    const hasRVFC = 'requestVideoFrameCallback' in v;
+    let busy = false, lastRun = 0, budget = 0;
+
+    const step = async () => {
+      if(!this.running) return;
+      const now = performance.now();
+      const ready = v.readyState >= 2 && v.videoWidth;
+      // Aim for a decode roughly every 60 ms, but back off if this device
+      // is slower than that so the interface stays responsive.
+      const interval = Math.max(55, Math.min(200, budget * 1.25));
+      if(ready && !busy && (hasRVFC || now - lastRun >= interval)){
+        busy = true; lastRun = now;
+        const t0 = performance.now();
+        try{
+          const text = await this.det(v, work, wctx);
+          this.framesSeen++;
+          if(text){ this.decodeHits++; this.onText(text); }
+        }catch(e){}
+        const cost = performance.now() - t0;
+        budget = budget ? budget * 0.8 + cost * 0.2 : cost;
+        this.decodeMs = budget;
+        busy = false;
+      }
+      if(hasRVFC) v.requestVideoFrameCallback(step);
+      else this.raf = requestAnimationFrame(step);
+    };
+    if(hasRVFC) v.requestVideoFrameCallback(step);
+    else this.raf = requestAnimationFrame(step);
+  },
+
+  onText(text){
+    const bytes = Fountain.base45Decode(text);
+    if(!bytes) return;
+    const f = Fountain.parseFrame(bytes);
+    if(!f) return;
+
+    if(f.type === 'manifest'){
+      if(!this.meta || this.meta.i !== f.meta.i) this.begin(f.meta);
+      return;
+    }
+    if(!this.dec || f.transferId !== this.meta.i) return;
+    if(!this.dec.add(f.seed, f.data)){ this.dupDroplets++; return; }
+    this.newDroplets++;
+
+    const pct = Math.floor((this.dec.count / this.dec.K) * 100);
+    this.stamps.push(performance.now());
+    if(this.stamps.length > 60) this.stamps.shift();
+    if(pct !== this.lastPct){ FX.blip(pct / 100); this.lastPct = pct; }
+    this.paintProgress();
+    if(this.dec.isComplete()) this.finish();
+  },
+
+  begin(meta){
+    this.meta = meta;
+    this.dec = new Fountain.Decoder(meta.k, meta.b, meta.l);
+    this.lockedAt = performance.now();
+    this.newDroplets = 0; this.dupDroplets = 0; this.peakRate = 0;
+    this.qrVersion = meta.qv || null;
+    $('#rname').textContent = meta.n;
+    $('#rsize').textContent = `${fmtBytes(meta.s)}${meta.z ? ' · compressed' : ''} · ${meta.k} blocks`;
+    $('#reticle').classList.add('locked');
+    $('#view-recv').classList.add('scanning');
+    $('#recv-sheet').classList.remove('hidden');
+    this.say('Receiving — hold steady');
+    FX.buzz(18);
+  },
+
+  paintProgress(){
+    const d = this.dec;
+    const frac = d.count / d.K;
+    $('#ring').style.strokeDashoffset = String(483.8 * (1 - frac));
+    $('#pct').textContent = Math.floor(frac * 100) + '%';
+    $('#blocks').textContent = `${d.count}/${d.K}`;
+
+    const now = performance.now();
+    const recent = this.stamps.filter(t => now - t < 3000);
+    const rate = recent.length / 3;
+    if(rate > this.peakRate) this.peakRate = rate;
+    $('#rrate').textContent = rate ? `${rate.toFixed(1)} blocks/sec` : 'waiting for frames…';
+    $('#reta').textContent = rate > 0.2 ? `about ${fmtTime((d.K - d.count) / rate)} left` : '';
+
+    // Shift the sparkline along, newest on the right.
+    const bars = this.sparkBars;
+    for(let i = 0; i < bars.length - 1; i++) bars[i].style.height = bars[i + 1].style.height;
+    bars[bars.length - 1].style.height = Math.max(2, Math.min(22, 2 + rate * 1.6)) + 'px';
+  },
+
+  async finish(){
+    this.running = false;
+    this.finishedAt = performance.now();
+    const packed = this.dec.result();
+    let out = packed;
+    try{ if(this.meta.z) out = await gunzip(packed); }
+    catch(e){ this.say('Decompression failed', true); return; }
+
+    this.integrityOk = Fountain.crc32(out) === (this.meta.c >>> 0) && out.length === this.meta.s;
+    this.result = new Blob([out], { type:this.meta.t || 'application/octet-stream' });
+
+    // Capture stats before the camera track is released.
+    this.stats = Metrics.summarise(this);
+    Metrics.save(this.stats);
+    this.close();
+
+    $('#dname').textContent = this.meta.n;
+    $('#dmeta').textContent = this.integrityOk
+      ? `${fmtBytes(this.meta.s)} · ${fmtTime(this.stats.timing.seconds)} · ${fmtBytes(this.stats.timing.goodputBps)}/s · integrity verified`
+      : `${fmtBytes(out.length)} · ⚠︎ checksum mismatch`;
+    $('#stats-panel').innerHTML = statsRows(this.stats);
+    $('#stats-panel').hidden = true;
+    $('#toggle-stats').textContent = 'Transfer details';
+    renderHistory();
+    FX.chime(); FX.buzz([26, 60, 26]);
+    go('view-done');
+  },
+
+  close(){
+    this.running = false;
+    cancelAnimationFrame(this.raf);
+    if(this.stream){ this.stream.getTracks().forEach(t => t.stop()); this.stream = null; }
+    $('#cam').srcObject = null;
+    keepAwake(false);
+  }
+};
+
+/* Decoder: the browser's native BarcodeDetector when present (hardware
+   accelerated), otherwise our own built-in decoder. Never the network. */
+async function makeDetector(){
+  if(CAPS.barcode){
+    try{
+      const supported = await window.BarcodeDetector.getSupportedFormats();
+      if(supported.includes('qr_code')){
+        const bd = new window.BarcodeDetector({ formats:['qr_code'] });
+        RX.engine = 'Native BarcodeDetector';
+        return async (video) => {
+          const found = await bd.detect(video);
+          return found.length ? found[0].rawValue : null;
+        };
+      }
+    }catch(e){}
+  }
+  RX.engine = 'Built-in decoder';
+  return async (video, work, wctx) => {
+    // A QR only needs enough pixels for its smallest module. Downscaling a
+    // 4K phone frame to ~1000px costs nothing in accuracy and a great deal
+    // less in time, which matters because Safari has no native detector.
+    const target = 1000;
+    const scale = Math.min(1, target / Math.max(video.videoWidth, video.videoHeight));
+    const w = Math.max(1, Math.round(video.videoWidth * scale));
+    const h = Math.max(1, Math.round(video.videoHeight * scale));
+    if(work.width !== w || work.height !== h){ work.width = w; work.height = h; }
+    wctx.drawImage(video, 0, 0, w, h);
+    const img = wctx.getImageData(0, 0, w, h);
+    return QRDecode.decode(img.data, w, h);
+  };
+}
+
+/* ============================================================
+   Wiring
+   ============================================================ */
+Theme.init();
+renderCaps();
+renderHistory();
+wireAccordions();
+paintBeam();
+if($('#ios-tip')) $('#ios-tip').hidden = false;   // useful advice for any sender
+installManifest();
+// Haptics only become legal after a real interaction.
+['pointerdown','keydown'].forEach(ev =>
+  window.addEventListener(ev, () => { FX.tapped = true; }, { once:true, passive:true }));
+
+$('#theme-cycle').addEventListener('click', () => Theme.cycle());
+$('#seg-speed').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  $$('#seg-speed button').forEach(x => x.setAttribute('aria-selected', x === b));
+  moveThumb($('#seg-speed'));
+  TX.preset = +b.dataset.v;
+  TX.estimate();
+  FX.buzz(6);
+});
+
+$('#go-send').addEventListener('click', () => { FX.arm(); FX.buzz(10); go('view-send'); });
+$('#go-recv').addEventListener('click', () => { FX.buzz(10); RX.open(); });
+$$('[data-back]').forEach(b => b.addEventListener('click', () => { FX.buzz(6); go(b.dataset.back); }));
+
+$('#drop').addEventListener('click', () => $('#file').click());
+$('#file').addEventListener('change', e => TX.pick(e.target.files[0]));
+['dragenter','dragover'].forEach(ev => $('#drop').addEventListener(ev, e => {
+  e.preventDefault(); $('#drop').classList.add('over');
+}));
+['dragleave','drop'].forEach(ev => $('#drop').addEventListener(ev, e => {
+  e.preventDefault(); $('#drop').classList.remove('over');
+}));
+$('#drop').addEventListener('drop', e => {
+  if(e.dataTransfer.files.length) TX.pick(e.dataTransfer.files[0]);
+});
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => e.preventDefault());
+
+$('#start').addEventListener('click', () => TX.start());
+$('#tx-stop').addEventListener('click', () => TX.stop());
+$('#tx-pause').addEventListener('click', () => TX.togglePause());
+$('#recv-back').addEventListener('click', () => { RX.close(); go('view-role'); });
+$('#recv-cancel').addEventListener('click', () => { RX.close(); go('view-role'); });
+$('#again').addEventListener('click', () => RX.open());
+
+$('#save').addEventListener('click', () => {
+  if(!RX.result) return;
+  const url = URL.createObjectURL(RX.result);
+  const a = document.createElement('a');
+  a.href = url; a.download = RX.meta.n;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+});
+
+$('#toggle-stats').addEventListener('click', () => {
+  const p = $('#stats-panel');
+  p.hidden = !p.hidden;
+  $('#toggle-stats').textContent = p.hidden ? 'Transfer details' : 'Hide details';
+  if(!p.hidden) wireAccordions(p);
+});
+
+/* A web app manifest built at runtime as a blob, so Add to Home Screen
+   works without shipping a second file. iOS also honours the apple-* meta
+   tags already in the head. */
+function installManifest(){
+  if(location.protocol === 'file:') return;   // blobs aren't valid manifests there
+  try{
+    const icon = document.querySelector('link[rel=icon]').href;
+    const manifest = {
+      name:'Lumen', short_name:'Lumen',
+      description:'Move a file between two devices on light alone.',
+      start_url:location.href.split('#')[0],
+      display:'standalone', orientation:'any',
+      background_color:'#F2F2F7', theme_color:'#F2F2F7',
+      icons:[{ src:icon, sizes:'any', type:'image/svg+xml', purpose:'any' }]
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type:'application/manifest+json' }));
+    const link = document.createElement('link');
+    link.rel = 'manifest'; link.href = url;
+    document.head.appendChild(link);
+  }catch(e){}
+}
+function paintBeam(){
+  const card = $('#beam-card');
+  const host = $('#host-card');
+  const url = location.href.split('#')[0];
+
+  // From a local file there is no address to share, so surface the route that
+  // produces one — that is the reliable way onto an iPhone.
+  if(host) host.hidden = false;
+  if(location.protocol === 'file:'){ card.hidden = true; return; }
+  try{
+    // Byte mode keeps the URL's case intact.
+    const q = QR.encode(new TextEncoder().encode(url), { ecl:QR.ECL.Q });
+    const cv = $('#beam');
+    const QUIET = 4, total = q.size + QUIET * 2;
+    const mod = Math.max(2, Math.floor(260 / total));
+    cv.width = cv.height = total * mod;
+    cv.style.width = cv.style.height = (total * mod) + 'px';
+    const c = cv.getContext('2d');
+    c.fillStyle = '#fff'; c.fillRect(0, 0, cv.width, cv.height);
+    c.fillStyle = '#000';
+    for(let y = 0; y < q.size; y++)
+      for(let x = 0; x < q.size; x++)
+        if(q.modules[y * q.size + x]) c.fillRect((x + QUIET) * mod, (y + QUIET) * mod, mod, mod);
+    const label = $('#beam-url');
+    if(label) label.textContent = url;
+    card.hidden = false;
+  }catch(e){ card.hidden = true; }
+}
+
+/* Tap a command to copy it. */
+$$('.cmd').forEach(el => el.addEventListener('click', async () => {
+  try{
+    await navigator.clipboard.writeText(el.textContent.trim());
+    el.classList.add('copied');
+    FX.buzz(8);
+    setTimeout(() => el.classList.remove('copied'), 1600);
+  }catch(e){
+    // Clipboard blocked; the text is select-all so it can still be copied.
+  }
+}));
+
+/* Sharing the app itself */
+$('#share-app').addEventListener('click', async () => {
+  const btn = $('#share-app');
+  btn.disabled = true;
+  const how = SelfShare.canShareFile() ? await SelfShare.share() : SelfShare.download();
+  btn.disabled = false;
+  const sum = $('#share-sum');
+  if(how === 'shared'){ sum.textContent = 'Sent'; FX.buzz(18); }
+  else if(how === 'downloaded'){ sum.textContent = 'Saved to this device'; }
+  setTimeout(() => { sum.textContent = 'One file, no setup'; }, 4000);
+});
+$('#download-app').addEventListener('click', () => {
+  SelfShare.download();
+  $('#share-sum').textContent = 'Saved to this device';
+  setTimeout(() => { $('#share-sum').textContent = 'One file, no setup'; }, 4000);
+});
+if(!SelfShare.canShareFile()) $('#share-label').textContent = 'Save a copy to share';
+
+/* Readiness check */
+$('#run-check').addEventListener('click', async () => {
+  const btn = $('#run-check');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  $('#check-sum').textContent = 'Checking…';
+  const rows = await runSelfTest();
+  $('#check-rows').innerHTML = renderSelfTest(rows);
+  const fails = rows.filter(r => r.state === 'fail').length;
+  const warns = rows.filter(r => r.state === 'warn').length;
+  $('#check-sum').textContent = fails ? `${fails} problem${fails > 1 ? 's' : ''}`
+                              : warns ? `Ready · ${warns} note${warns > 1 ? 's' : ''}`
+                              : 'All good';
+  btn.disabled = false; btn.textContent = 'Run again';
+  // The panel just grew, so re-measure any open ancestor.
+  const body = $('#acc-check .acc-b');
+  if($('#acc-check').classList.contains('open')) body.style.maxHeight = body.scrollHeight + 'px';
+});
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    if(current === 'view-tx') TX.stop();
+    else if(current === 'view-recv'){ RX.close(); go('view-role'); }
+  }
+});
+
+window.addEventListener('beforeunload', e => {
+  if(TX.active || RX.running){ e.preventDefault(); e.returnValue = ''; }
+});
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  $$('.seg').forEach(moveThumb);
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if(TX.active){ canvas.width = 0; } }, 150);
+});
+// Reposition whenever a control is first laid out (unhidden, font swap, resize).
+$$('.seg').forEach(seg => {
+  if(typeof ResizeObserver !== 'undefined') new ResizeObserver(() => moveThumb(seg)).observe(seg);
+});
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => $$('.seg').forEach(moveThumb));
+requestAnimationFrame(() => $$('.seg').forEach(moveThumb));
+
+// Exposed for automated end-to-end verification.
+window.__qrs = { QR, Fountain, QRDecode, PRESETS, TX, RX, go, paint, SelfShare, runSelfTest, Metrics };
+})();
+</script>
+</body>
+</html>
