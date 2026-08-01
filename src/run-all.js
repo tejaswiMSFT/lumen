@@ -11,6 +11,7 @@ const TESTS = [
   'test-capture.js',
   'test-ios.js',
   'test-progress.js',
+  'test-bootstrap.js',
   'test-offline.js',
   'test-subpath.js'
 ];

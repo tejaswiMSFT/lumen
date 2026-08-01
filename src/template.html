@@ -983,12 +983,14 @@ PRESETS.forEach(p => {
 
 const DROPLET_HEADER = 9;
 
-/* The manifest tells the receiver what is coming, so it must arrive quickly —
-   but every manifest frame is a frame not carrying data. Send them densely for
-   the first couple of seconds, then back off. */
-const MANIFEST_LEAD_FRAMES = 40;
-const MANIFEST_LEAD_EVERY = 4;
-const MANIFEST_EVERY = 24;
+/* The manifest tells the receiver what is coming, and until one arrives
+   nothing can be assembled. Codes can be hard to read at a distance, so a
+   sparse manifest means a receiver that reads a handful of frames may catch
+   none of them and appear stuck. Keep them dense early and still frequent
+   afterwards — the sender has no back-channel and can never know. */
+const MANIFEST_LEAD_FRAMES = 60;
+const MANIFEST_LEAD_EVERY = 3;
+const MANIFEST_EVERY = 8;
 function manifestDue(n){
   if(n < 2) return true;
   return n < MANIFEST_LEAD_FRAMES ? n % MANIFEST_LEAD_EVERY === 0
@@ -1832,6 +1834,7 @@ const RX = {
     this.dec = null; this.meta = null; this.stamps = []; this.lastPct = -1; this.result = null;
     this.newDroplets = 0; this.dupDroplets = 0; this.framesSeen = 0; this.decodeHits = 0;
     this.peakRate = 0; this.lockedAt = 0; this.finishedAt = 0; this.aimAt = 0; this.camRes = null;
+    this.pending = [];
     this.integrityOk = false; this.stats = null; this.qrVersion = null;
     $('#recv-sheet').classList.add('hidden');
     $('#reticle').classList.remove('locked');
@@ -1859,9 +1862,11 @@ const RX = {
                            `${Math.round(this.decodeMs || 0)} ms/scan`;
       }else{
         const small = this.camRes && Math.min(this.camRes.w, this.camRes.h) < 700;
+        const held = (this.pending && this.pending.length) || 0;
         diag.textContent =
           `${this.camRes ? this.camRes.w + '×' + this.camRes.h : 'starting camera'} · ` +
           `${this.framesSeen} scans · ${this.decodeHits} codes` +
+          (held ? ` · ${held} held` : '') +
           (small ? ' · low resolution' : '');
       }
     }
@@ -1876,7 +1881,14 @@ const RX = {
     // No manifest yet. Distinguish "seeing nothing" from "seeing codes but
     // still waiting for the file details" — they need different remedies.
     if(this.decodeHits > 0){
-      this.say(`Reading codes — waiting for the file details (${this.decodeHits} read)`);
+      const held = (this.pending && this.pending.length) || 0;
+      // Reading codes but not locking means the yield is too low to have caught
+      // a manifest yet. Say what actually helps rather than "hold steady".
+      this.say(held
+        ? `Reading codes (${this.decodeHits}) — ${held} held, waiting for the file details. Move closer.`
+        : `Reading codes (${this.decodeHits}) — waiting for the file details`);
+    }else if(this.framesSeen > 200){
+      this.say('Still nothing readable — move closer so the code fills the square, raise the other screen\'s brightness, or try the Steady preset');
     }else if(this.framesSeen > 12){
       this.say('No code yet — fill the bright square with the code, about a hand-span away');
     }else{
@@ -1943,7 +1955,22 @@ const RX = {
       if(!this.meta || this.meta.i !== f.meta.i) this.begin(f.meta);
       return;
     }
-    if(!this.dec || f.transferId !== this.meta.i) return;
+
+    // A droplet read before the manifest arrived used to be thrown away. When
+    // codes are hard to read that is exactly the wrong thing to do: the few
+    // that got through were the ones we could least afford to lose. Hold them
+    // until the manifest lands, then replay.
+    if(!this.dec){
+      this.pending = this.pending || [];
+      if(this.pending.length < 400) this.pending.push(f);
+      this.earlyDroplets = this.pending.length;
+      return;
+    }
+    if(f.transferId !== this.meta.i) return;
+    this.take(f);
+  },
+
+  take(f){
     if(!this.dec.add(f.seed, f.data)){ this.dupDroplets++; return; }
     this.newDroplets++;
 
@@ -1968,6 +1995,16 @@ const RX = {
     $('#recv-sheet').classList.remove('hidden');
     this.say('Receiving — hold steady');
     FX.buzz(18);
+
+    // Replay anything read before the manifest arrived, so nothing hard-won
+    // is wasted.
+    if(this.pending && this.pending.length){
+      const held = this.pending;
+      this.pending = [];
+      for(const f of held){
+        if(f.transferId === meta.i && !this.dec.isComplete()) this.take(f);
+      }
+    }
   },
 
   paintProgress(){
@@ -2263,7 +2300,8 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => $$('.
 requestAnimationFrame(() => $$('.seg').forEach(moveThumb));
 
 // Exposed for automated end-to-end verification.
-window.__qrs = { QR, Fountain, QRDecode, PRESETS, TX, RX, go, paint, SelfShare, runSelfTest, Metrics };
+window.__qrs = { QR, Fountain, QRDecode, PRESETS, TX, RX, go, paint, SelfShare, runSelfTest,
+                 Metrics, manifestDue };
 })();
 </script>
 </body>
