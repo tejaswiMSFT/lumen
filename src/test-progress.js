@@ -34,6 +34,7 @@ function line(l, ok, d) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${l.padEnd(46)} 
       return QRDecode.decode(cx.getImageData(0,0,cv.width,cv.height).data, cv.width, cv.height);
     };
     const pill = () => document.getElementById('aim-txt').textContent;
+    const diag = () => document.getElementById('aim-diag').textContent;
 
     go('view-recv'); RX.reset(); RX.running = true;
     RX.engine = 'Built-in decoder';
@@ -51,8 +52,10 @@ function line(l, ok, d) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${l.padEnd(46)} 
     // Nothing readable at all.
     RX.reset(); RX.running = true;
     RX.framesSeen = 30; RX.decodeHits = 0; RX.aimAt = 0;
+    RX.camRes = { w:1920, h:1080 };
     RX.paintAim(performance.now());
     const nothingSeen = pill();
+    const diagBefore = diag();
 
     // Now run a real transfer and sample the pill as it goes.
     RX.reset(); RX.running = true;
@@ -73,7 +76,8 @@ function line(l, ok, d) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${l.padEnd(46)} 
       if (n % 12 === 0) samples.push(pill());
     }
     return {
-      atStart, beforeLock, nothingSeen, sheetShown, samples,
+      atStart, beforeLock, nothingSeen, sheetShown, samples, diagBefore,
+      diagDuring: diag(),
       blocks: enc.K, frames: n,
       pctEl: document.getElementById('pct').textContent,
       blocksEl: document.getElementById('blocks').textContent
@@ -84,8 +88,10 @@ function line(l, ok, d) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${l.padEnd(46)} 
 
   f += line('idle: tells the user where to point', /point at the sending screen/i.test(r.atStart), `"${r.atStart}"`);
   f += line('reading, not yet locked: says so', /waiting for the file details/i.test(r.beforeLock), `"${r.beforeLock}"`);
-  f += line('nothing readable: gives a remedy', /fill more of the frame/i.test(r.nothingSeen), `"${r.nothingSeen}"`);
+  f += line('nothing readable: gives a remedy', /fill the bright square/i.test(r.nothingSeen), `"${r.nothingSeen}"`);
   f += line('progress sheet appears on lock', r.sheetShown === true);
+  f += line('diagnostics show scans and codes', /\d+ scans · \d+ codes/.test(r.diagBefore), `"${r.diagBefore}"`);
+  f += line('diagnostics switch to droplet counts', /good · .*repeat/.test(r.diagDuring), `"${r.diagDuring}"`);
 
   const withPct = r.samples.filter(s => /Receiving \d+%/.test(s));
   f += line('pill shows a live percentage', withPct.length >= 3,

@@ -419,7 +419,11 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
 /* Reticle */
 .reticle{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:min(72vw,340px);aspect-ratio:1;
+  width:min(76vw,360px);aspect-ratio:1;border-radius:18px;
+  /* Darken everything outside the target so the aiming area is unmistakable —
+     "point the camera" is useless if the whole screen looks equally live. */
+  box-shadow:0 0 0 100vmax rgba(0,0,0,.5);
+  transition:box-shadow .5s var(--ease);
 }
 .reticle i{
   position:absolute;width:38px;height:38px;border:3.5px solid rgba(255,255,255,.95);
@@ -431,10 +435,11 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
 .reticle i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 14px 0}
 @keyframes breathe{0%,100%{opacity:.95}50%{opacity:.45}}
 .reticle.locked i{border-color:var(--green);animation:none}
-/* Once locked, shrink the reticle upward so the progress sheet owns the lower half. */
+/* Once locked, shrink the reticle upward so the progress sheet owns the lower
+   half, and drop the mask — aiming help is no longer the point. */
 .camview.scanning .reticle{
-  top:31%;width:min(44vw,190px);opacity:.55;
-  transition:top .5s var(--ease),width .5s var(--ease),opacity .5s var(--ease);
+  top:31%;width:min(44vw,190px);opacity:.55;box-shadow:none;
+  transition:top .5s var(--ease),width .5s var(--ease),opacity .5s var(--ease),box-shadow .4s var(--ease);
 }
 
 .pill{
@@ -883,9 +888,12 @@ button,.opt,.acc-h,.drop{touch-action:manipulation}
     <div class="reticle" id="reticle"><i></i><i></i><i></i><i></i></div>
 
     <div class="spacer" style="flex:1"></div>
-    <div class="pill" id="aim-pill" style="margin-bottom:calc(28px + var(--sab))">
+    <div class="pill" id="aim-pill" style="margin-bottom:8px">
       <span class="pulse" style="background:var(--blue)"></span><span id="aim-txt">Starting camera…</span>
     </div>
+    <div class="t-cap num" id="aim-diag"
+         style="text-align:center;color:rgba(255,255,255,.62);margin-bottom:calc(24px + var(--sab));
+                text-shadow:0 1px 3px rgba(0,0,0,.7);min-height:14px"></div>
 
     <div class="sheet hidden" id="recv-sheet">
       <div class="row" style="gap:18px;align-items:center">
@@ -1445,12 +1453,14 @@ async function runSelfTest(){
     }
   }
 
-  // Prove the whole optical chain works, in memory.
+  // Prove the whole optical chain works, in memory — using the densest symbol
+  // this device will actually have to read, not an easy one.
   try{
-    const probe = new Uint8Array(256);
+    const p = PRESETS[PRESETS.length - 1];
+    const probe = new Uint8Array(p.block);
     for(let i = 0; i < probe.length; i++) probe[i] = (i * 31) & 255;
     const text = Fountain.base45Encode(Fountain.encodeDroplet(1, 0, probe));
-    const q = QR.encode(text, { ecl:QR.ECL.M });
+    const q = QR.encode(text, { ecl:p.ecl, version:p.ver });
     const cv = document.createElement('canvas');
     const QUIET = 4, mod = 4, total = q.size + QUIET * 2;
     cv.width = cv.height = total * mod;
@@ -1467,7 +1477,7 @@ async function runSelfTest(){
     const f = back ? Fountain.parseFrame(Fountain.base45Decode(back)) : null;
     const ok = !!(f && f.type === 'droplet' && f.seed === 0);
     add('Encode → decode', ok ? 'ok' : 'fail',
-        ok ? `Round trip verified in ${ms.toFixed(0)} ms` : 'Self-check failed');
+        ok ? `v${p.ver} round trip verified in ${ms.toFixed(0)} ms` : 'Self-check failed');
   }catch(e){
     add('Encode → decode', 'fail', e.message);
   }
@@ -1762,7 +1772,10 @@ const RX = {
 
     // Safari is stricter about constraints than Chromium: an unsatisfiable
     // ideal can still fail, so fall back to progressively simpler requests.
+    // Resolution is the single thing that decides whether a dense symbol can
+    // be read at all, so ask firmly before asking politely.
     const attempts = [
+      { video:{ facingMode:{ ideal:'environment' }, width:{ min:1280, ideal:1920 }, height:{ min:720, ideal:1080 } }, audio:false },
       { video:{ facingMode:{ ideal:'environment' }, width:{ ideal:1920 }, height:{ ideal:1080 } }, audio:false },
       { video:{ facingMode:'environment' }, audio:false },
       { video:true, audio:false }
@@ -1792,6 +1805,18 @@ const RX = {
       const caps = track.getCapabilities ? track.getCapabilities() : {};
       if(caps.focusMode && caps.focusMode.includes('continuous'))
         await track.applyConstraints({ advanced:[{ focusMode:'continuous' }] });
+
+      // If the browser handed back something small, ask again — a 640x480
+      // stream cannot resolve a dense symbol however well it is aimed.
+      let st = track.getSettings ? track.getSettings() : {};
+      if(st.width && st.width < 1280 && caps.width && caps.width.max >= 1280){
+        try{
+          await track.applyConstraints({ width:{ ideal:Math.min(1920, caps.width.max) },
+                                         height:{ ideal:Math.min(1080, (caps.height && caps.height.max) || 1080) } });
+          st = track.getSettings();
+        }catch(e){}
+      }
+      if(st.width) this.camRes = { w:st.width, h:st.height };
     }catch(e){}
 
     this.det = await makeDetector();
@@ -1806,7 +1831,7 @@ const RX = {
   reset(){
     this.dec = null; this.meta = null; this.stamps = []; this.lastPct = -1; this.result = null;
     this.newDroplets = 0; this.dupDroplets = 0; this.framesSeen = 0; this.decodeHits = 0;
-    this.peakRate = 0; this.lockedAt = 0; this.finishedAt = 0; this.aimAt = 0;
+    this.peakRate = 0; this.lockedAt = 0; this.finishedAt = 0; this.aimAt = 0; this.camRes = null;
     this.integrityOk = false; this.stats = null; this.qrVersion = null;
     $('#recv-sheet').classList.add('hidden');
     $('#reticle').classList.remove('locked');
@@ -1825,6 +1850,22 @@ const RX = {
     if(this.aimAt && now - this.aimAt < 400) return;
     this.aimAt = now;
 
+    // Always show the raw facts. Without them a stalled transfer looks exactly
+    // like a working one, and neither can be diagnosed from the outside.
+    const diag = $('#aim-diag');
+    if(diag){
+      if(this.dec){
+        diag.textContent = `${this.newDroplets} good · ${this.dupDroplets} repeat · ` +
+                           `${Math.round(this.decodeMs || 0)} ms/scan`;
+      }else{
+        const small = this.camRes && Math.min(this.camRes.w, this.camRes.h) < 700;
+        diag.textContent =
+          `${this.camRes ? this.camRes.w + '×' + this.camRes.h : 'starting camera'} · ` +
+          `${this.framesSeen} scans · ${this.decodeHits} codes` +
+          (small ? ' · low resolution' : '');
+      }
+    }
+
     if(this.dec){
       const pct = Math.floor((this.dec.count / this.dec.K) * 100);
       const left = this.dec.K - this.dec.count;
@@ -1837,7 +1878,7 @@ const RX = {
     if(this.decodeHits > 0){
       this.say(`Reading codes — waiting for the file details (${this.decodeHits} read)`);
     }else if(this.framesSeen > 12){
-      this.say('No code yet — fill more of the frame, and check the other screen is showing codes');
+      this.say('No code yet — fill the bright square with the code, about a hand-span away');
     }else{
       this.say('Point at the sending screen');
     }
@@ -1868,6 +1909,8 @@ const RX = {
       if(!this.running) return;
       const now = performance.now();
       const ready = v.readyState >= 2 && v.videoWidth;
+      if(ready && (!this.camRes || this.camRes.w !== v.videoWidth))
+        this.camRes = { w:v.videoWidth, h:v.videoHeight };
       const interval = Math.max(30, Math.min(200, budget * 1.25));
       if(ready && !busy && (hasRVFC || now - lastRun >= interval)){
         busy = true; lastRun = now;
