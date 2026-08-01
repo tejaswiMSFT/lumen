@@ -8,6 +8,7 @@ const TESTS = [
   'test-fountain.js',
   'test-pipeline.js',
   'test-decode.js',
+  'test-capture.js',
   'test-ios.js',
   'test-progress.js',
   'test-offline.js',

@@ -2001,16 +2001,32 @@ async function makeDetector(){
     }catch(e){}
   }
   RX.engine = 'Built-in decoder';
+  let pass = 0;
   return async (video, work, wctx) => {
-    // A QR only needs enough pixels for its smallest module. Downscaling a
-    // 4K phone frame to ~1000px costs nothing in accuracy and a great deal
-    // less in time, which matters because Safari has no native detector.
-    const target = 1000;
-    const scale = Math.min(1, target / Math.max(video.videoWidth, video.videoHeight));
-    const w = Math.max(1, Math.round(video.videoWidth * scale));
-    const h = Math.max(1, Math.round(video.videoHeight * scale));
+    const vw = video.videoWidth, vh = video.videoHeight;
+    // Resolution is what decides whether a symbol is readable: below roughly
+    // four pixels per module nothing decodes. Downscaling the whole frame to
+    // 1000 px throws that away — a v26 symbol filling 70% of a portrait frame
+    // lands at ~3 px/module and fails. So mostly decode a native-resolution
+    // square crop of the centre, which is where the reticle tells the user to
+    // aim, and only occasionally fall back to the whole (downscaled) frame in
+    // case the code is off to one side.
+    const wide = (pass++ & 3) === 3;
+    let sx, sy, sw, sh, w, h;
+    if(wide){
+      const scale = Math.min(1, 1000 / Math.max(vw, vh));
+      sx = 0; sy = 0; sw = vw; sh = vh;
+      w = Math.max(1, Math.round(vw * scale));
+      h = Math.max(1, Math.round(vh * scale));
+    }else{
+      const side = Math.min(vw, vh);
+      sx = Math.round((vw - side) / 2); sy = Math.round((vh - side) / 2);
+      sw = sh = side;
+      const scale = Math.min(1, 1200 / side);
+      w = h = Math.max(1, Math.round(side * scale));
+    }
     if(work.width !== w || work.height !== h){ work.width = w; work.height = h; }
-    wctx.drawImage(video, 0, 0, w, h);
+    wctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
     const img = wctx.getImageData(0, 0, w, h);
     return QRDecode.decode(img.data, w, h);
   };
